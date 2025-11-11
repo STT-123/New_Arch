@@ -1,29 +1,30 @@
-#include "message_queue.h"
-#include "sqlite_storage.h"
-#include "ocpp_messages.h"
-#include "batdata.h"
-#include "project.h"
 #include <time.h>
-#include "log/log.h"
+#include "device_drv/ocpp_drv/ocpp/batdata.h"
+#include "device_drv/ocpp_drv/ocpp/project.h"
+#include "device_drv/ocpp_drv/ocpp/message_queue.h"
+#include "device_drv/ocpp_drv/ocpp/sqlite_storage.h"
+#include "device_drv/ocpp_drv/ocpp/ocpp_messages.h"
+/*------以上暂时为ocpp调试使用-----------*/
 
-#include "./Modbus/C_ModbusServer_Handle.h"
-#include "./GLB/G_GloabalVariable.h"
-#include "./GLB/G_SystemConf.h"
-#include "./new/2_device/bcu_drv/bcu_drv.h"
-#include "./new/2_device/bmu_drv/bmu_drv.h"
-#include "./DRV/Drv_SDCard.h"
-#include "./new/1_interface/epoll/myepoll.h"
-#include "log/log.h"
-#include "./BMS/bms/CANRcvFcn.h"
-
-#include "./TASK/Net_Config_Task.h"
-#include "./TASK/OTA_Upgrad_Task.h"
-
+#include "device_drv/modbustcp_drv/modbustcp_drv.h"
+#include "interface/G_GloabalVariable.h"
+#include "interface/log/log.h"
+#include "interface/epoll/myepoll.h"
+// #include "interface/BMS/bms/CANRcvFcn.h"
+// #include "interface/BMS/bms/CANRcvFcn.h"
+#include "interface/setting/ip_setting.h"
+#include "device_drv/bcu_drv/bcu_drv.h"
+#include "device_drv/bmu_drv/bmu_drv.h"
+#include "device_drv/sd_deal/sd_deal.h"
+#include "function_task/ota_task/otaupgrad_task.h"
+#include "function_task/bcu_task/bcu_task.h"
+#include "function_task/bmu_task/bmu_task.h"
+#include "function_task/abnormal_check_task/abnormal_check_task.h"
+#include "function_task/xmodem_task/xmodem_task.h"
+#include "interface/BMS/bms/CANRcvFcn.h"
 OTAObject otactrl;
-static pthread_rwlock_t ota_rwlock = PTHREAD_RWLOCK_INITIALIZER;//otactrl的读写锁，读并发，写独占
 
-void all_init(void);
-void all_thread_init(void);
+
 void update_bat_data(sqlite3 *db);
 extern uint8_T TCU_FcnStopSet;                /* '<Root>/TCU_FcnStopSet' */
 struct tm utc_timeinfo;
@@ -31,47 +32,46 @@ struct tm utc_timeinfo;
 int main(int argc, char **argv)
 {
     // int counter = 60;
-    // sqlite3 *db;
-    // init_db(&db);
-    // uint16_T test = 0;
-    // /*硬件接口初始化部分*/
-    all_init();
+    // // sqlite3 *db;
+    // // init_db(&db);
+    // // uint16_T test = 0;
+    // enqueue_message(build_boot_notification());// OCPP初始化
 
-    // /*任务线程初始化*/
-    all_thread_init();
+
+
+    /*=================硬件接口初始化部分================*/
+    printf_version();//初始打印
+    log_init();// 日志初始化
+    my_epoll_init(); // 初始化epoll环境
+    BCU_Init(); // ecu 和 bcu通信can初始化（打开can口 绑定回调）
+    BMU_Init(); // ecu 和 bmu通信can初始化（打开can口 绑定回调）
+    Drv_init_double_ring_buffer(&canDoubleRingBuffer); // 初始化往sd卡写数据用的双环形缓冲区
+    Drv_init_can_id_history();                         // 初始化往SD卡写的can消息的缓存区
+    G_settings_init();// 判断本机IP 如果不存在 默认使用110
+    
+
+    /*=================任务初始化部分================*/
+    BCU_DealTaskCreate();//CAN 0处理任务-BCU+空调
+    BMU_DealTaskCreate();//CAN 1处理任务-BMU
+    OTAUpgradTaskCreate();//升级任务
+    modbusTcpServerTaskCreate();//moduTCP服务
+    XmodemCommTaskCreate();//监听OTA 存储升级文件Xmodem协议
+    SDCardDataSaveTaskCreate(); // SD卡写任务
+    AbnormalDetectionTaskCreate(); // 异常监测任务
+
+
+
+    //OCPPCommunicationTaskCreate();
+    //FtpServiceThreadCreate();
 
     while (1)
     {
         sleep(1);
-         printf("Mobud[0x1012] = %x\r\n",modbusBuff[0x4012-0x3000]);
-        // printf("Mobud[0x6000] = %x\r\n",modbusBuff[0x3417-0x3000]);
-        // set_TCU_FcnStopSet((real_T)0xFF);
-        // real_T test =   get_TCU_FcnStopSet();
-        // printf("test = %x\r\n",(unsigned int)test);
-
-        // printf("BCU_FaultInfoLv1H = 0x%x\r\n",BCU_FaultInfoLv1H);
-        // printf("BCU_FaultInfoLv1L = 0x%x\r\n",BCU_FaultInfoLv1L);
-        // printf("BCU_FaultInfoLv2H = 0x%x\r\n",BCU_FaultInfoLv2H);
-        // printf("BCU_FaultInfoLv2L = 0x%x\r\n",BCU_FaultInfoLv2L);
-        // printf("BCU_FaultInfoLv3H = 0x%x\r\n",BCU_FaultInfoLv3H);
-        // printf("BCU_FaultInfoLv3L = 0x%x\r\n",BCU_FaultInfoLv3L);
-        // printf("BCU_FaultInfoLv4H = 0x%x\r\n",BCU_FaultInfoLv4H);
-        // printf("BCU_FaultInfoLv4L = 0x%x\r\n",BCU_FaultInfoLv4L);;
-  
-        //  LOG("BCU_TimeYear = %d\n",BCU_TimeYear);
-        //  LOG("BCU_TimeMonth = %d\n",BCU_TimeMonth);
-        //  LOG("BCU_TimeDay = %d\n",BCU_TimeDay);
-        // time_t mainnow = time(NULL);
-        // struct tm maintimeinfo;
-        // struct tm *maintm_info = localtime(&mainnow);
-        // maintimeinfo = *maintm_info;
-        // mktime(&maintimeinfo);
-        // printf("Main timeinfo:%d-%d-%d %d:%d:%d\r\n", maintimeinfo.tm_year + 1900, maintimeinfo.tm_mon +1, maintimeinfo.tm_mday, maintimeinfo.tm_hour, maintimeinfo.tm_min, maintimeinfo.tm_sec);
-        
-        enqueue_message(build_heartbeat());
+         printf("Mobud[0x1012] = \r\n");
+        // printf("Mobud[0x1012] = %x\r\n",modbusBuff[0x4012-0x3000]);
+        // enqueue_message(build_heartbeat());
 
         // update_bat_data(db); // 更新电池数据
-
         // if (++counter >= 60)
         // {
         //     counter = 0;
@@ -102,52 +102,6 @@ static void printf_version(void)
     LOG("[VERSION] BAT ECU_EU START RUN!!!. \n");
     LOG("[VERSION] Software compilation time %s--%s. \n", compile_date, compile_time);
     LOG("========================================================= \n");
-}
-
-void all_init(void)
-{
-    printf_version();
-    // 日志初始化
-    log_init();
-
-    // can通信功能
-    my_epoll_init(); // 初始化epoll环境
-    BCU_Init(); // ecu 和 bcu通信can初始化（打开can口 绑定回调）
-    BMU_Init(); // ecu 和 bmu通信can初始化（打开can口 绑定回调）
-    // /* SD卡存储相关 */
-    Drv_init_double_ring_buffer(&canDoubleRingBuffer); // 初始化往sd卡写数据用的双环形缓冲区
-    Drv_init_can_id_history();                         // 初始化往SD卡写的can消息的缓存区
-
-    // 判断本机IP 如果不存在 默认使用110
-    G_settings_init();
-
-
-    // OCPP初始化
-    enqueue_message(build_boot_notification());
-}
-
-void all_thread_init(void)
-{
- 
-    CAN0RecvDelTaskCreate();//CAN 0处理任务-BCU+空调
-
-    CAN1RecvDelTaskCreate();//CAN 1处理任务-BMU
-
-    // FtpServiceThreadCreate();
-
-    OTAUpgradTaskCreate();//升级任务
-
-    NETConfigTaskCreate();//moduTCP服务
-
-    TcpServerExampleTaskCreate();//监听OTA 存储升级文件Xmodem
-
-    SDCardDataSaveTaskCreate(); // SD卡写任务
-    
-    AnormalDetectionTaskCreate(); // 异常监测任务
-
-    SDCapacityChenkTaskCreate();//SD卡容量检测任务
-
-    //OCPPCommunicationTaskCreate();
 }
 
 // ✅ 每秒更新一次数据（可由外部线程或主循环调用）
