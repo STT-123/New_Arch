@@ -38,7 +38,7 @@ void *OTA_Upgrad_Task(void *arg)
         if (pOTA == NULL)
         {
             printf("Error: Failed to allocate memory for default OTAObject.\r\n");
-            LOG("Error: Failed to allocate memory for default OTAObject.\r\n");
+            LOG("[OTA] Error: Failed to allocate memory for default OTAObject.\r\n");
             return NULL;
         }
     }
@@ -63,7 +63,7 @@ void *OTA_Upgrad_Task(void *arg)
             set_modbus_reg_val(OTASTATUSREGADDR, OTASTARTRUNNING);//0124.升级状态
             if (pOTA->deviceType == ECU)
             {
-                LOG("pOTA->deviceType == ECU : %u\r\n", pOTA->deviceType);
+                LOG("[OTA] pOTA->deviceType == ECU : %u\r\n", pOTA->deviceType);
                 set_modbus_reg_val(OTAPPROGRESSREGADDR, 0); // 0124
 
                 ECU_OTA(pOTA);
@@ -79,17 +79,17 @@ void *OTA_Upgrad_Task(void *arg)
                         pOTA->deviceID = 0;
                         pOTA->OTAStart = 1;
                         ecustatus.ErrorReg = 0;
-                        LOG("ECU OTA failed, error ECUOtaFlag count:  %d\r\n", ECUOtaFlag);
+                        LOG("[OTA] ECU OTA failed, error ECUOtaFlag count:  %d\r\n", ECUOtaFlag);
                         continue;
                     }
                     else
                     {
-                        LOG(" ECUOtaFlag > 3 \r\n");
+                        LOG("[OTA]  ECUOtaFlag > 3 \r\n");
                     }
                 }
                 else if (ecustatus.DeviceProgramOkFlag)
                 {
-                    LOG("errot\r\n");
+                    LOG("[OTA] errot\r\n");
                 }
 
                 set_modbus_reg_val(OTASTATUSREGADDR, OTASUCCESS);
@@ -112,7 +112,7 @@ void *OTA_Upgrad_Task(void *arg)
                             pOTA->deviceID = ACPOTACANID;
                             pOTA->OTAStart = 1;
                             independentStatus.ErrorReg = 0;
-                            LOG("ACP OTA failed, error ACPOtaFlag count:  %d\r\n", ACPOtaFlag);
+                            LOG("[OTA] ACP OTA failed, error ACPOtaFlag count:  %d\r\n", ACPOtaFlag);
                             continue;
                         }
 
@@ -132,7 +132,7 @@ void *OTA_Upgrad_Task(void *arg)
                             pOTA->deviceID = DCDCOTACANID;
                             pOTA->OTAStart = 1;
                             independentStatus.ErrorReg = 0;
-                            LOG("DCDC OTA failed, error ACPOtaFlag count:  %d\r\n", DCDCOtaFlag);
+                            LOG("[OTA] DCDC OTA failed, error ACPOtaFlag count:  %d\r\n", DCDCOtaFlag);
                             continue;
                         }
 
@@ -147,7 +147,7 @@ void *OTA_Upgrad_Task(void *arg)
                 {
                     independentStatus.DeviceProgramOkFlag = 0; // 需要添加
                     printf("CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
-                    LOG("CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
+                    LOG("[OTA] CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
                     if (pOTA->deviceType == ACP)
                     {
                         FinishACPOtaAndCleanup(pOTA);
@@ -173,7 +173,7 @@ void *OTA_Upgrad_Task(void *arg)
                         pOTA->deviceID = ACPOTACANID;
                         pOTA->OTAStart = 1;
                         udsstatus.ErrorReg = 0;
-                        LOG("ACP OTA failed, error ACPOtaFlag count:  %d\r\n", ACOtaFlag);
+                        LOG("[OTA] ACP OTA failed, error ACPOtaFlag count:  %d\r\n", ACOtaFlag);
                         continue;
                     }
                     else
@@ -187,7 +187,7 @@ void *OTA_Upgrad_Task(void *arg)
                 {
                     udsstatus.DeviceProgramOkFlag = 0; // 需要添加
                     printf("CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
-                    LOG("CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
+                    LOG("[OTA] CAN ID 0x%x ACP OTA success!\r\n", pOTA->deviceID);
                     if (pOTA->deviceType == AC)
                     {
                         FinishACOtaAndCleanup(pOTA);
@@ -209,7 +209,7 @@ void *OTA_Upgrad_Task(void *arg)
                     
                     // 主业务判断：检查CAN2是否就绪
                     if (!is_can2_ready()) {
-                        LOG("CAN2 not ready, waiting...\n");
+                        LOG("[OTA] CAN2 not ready, waiting...\n");
                         // 可以等待几秒或直接报错
                         int wait_count = 0;
                         while (!is_can2_ready() && wait_count < 10) {
@@ -231,18 +231,18 @@ void *OTA_Upgrad_Task(void *arg)
                             XCP_OTA(pOTA);
                             if ((xcpstatus.ErrorReg == 0) && (pOTA->OTAStart == 0))
                             {
-                                LOG("CAN ID 0x%x BCU OTA success!\r\n", pOTA->deviceID);
+                                LOG("[OTA] CAN ID 0x%x BCU OTA success!\r\n", pOTA->deviceID);
                                 break;
                             }
                             else
                             {
                                 BCUOtaFlag++;
-                                LOG("CAN ID 0x%x BCU OTA failed, retry count: %d\r\n", pOTA->deviceID, BCUOtaFlag);
+                                LOG("[OTA] CAN ID 0x%x BCU OTA failed, retry count: %d\r\n", pOTA->deviceID, BCUOtaFlag);
                                 set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
                             }
                         }
                     }else{
-                        LOG("CAN2 is not ready\r\n");
+                        LOG("[OTA] CAN2 is not ready\r\n");
                     }
                 }
                 else if (pOTA->deviceType == BMU)
@@ -253,7 +253,7 @@ void *OTA_Upgrad_Task(void *arg)
                     
                     // 主业务判断：检查CAN2是否就绪
                     if (!is_can3_ready()) {
-                        LOG("CAN3 not ready, waiting...\n");
+                        LOG("[OTA] CAN3 not ready, waiting...\n");
                         // 可以等待几秒或直接报错
                         int wait_count = 0;
                         while (!is_can3_ready() && wait_count < 10) {
@@ -265,29 +265,29 @@ void *OTA_Upgrad_Task(void *arg)
                     {
                         for (int i = 0; i < BMUMAXNUM; i++)
                         {
-                            LOG("BMU OTA start! i : ,ReOtaFlag = %d %d\r\n", i,ReOtaFlag);
+                            LOG("[OTA] BMU OTA start! i : ,ReOtaFlag = %d %d\r\n", i,ReOtaFlag);
                             ReOtaFlag = 0;
                             
                             while (ReOtaFlag < 3)
                             {
                                 CurrentOTADeviceCanID = (0x1821D << 12) | ((i + 1) << 8) | 0x10;
                                 pOTA->deviceID = CurrentOTADeviceCanID;
-                                LOG("Start OTA try %d, CAN ID 0x%x BMU %d\r\n", ReOtaFlag + 1, CurrentOTADeviceCanID, i);
-                                LOG("pOTA->deviceID == BMU : %x\r\n", pOTA->deviceID);
+                                LOG("[OTA] Start OTA try %d, CAN ID 0x%x BMU %d\r\n", ReOtaFlag + 1, CurrentOTADeviceCanID, i);
+                                LOG("[OTA] pOTA->deviceID == BMU : %x\r\n", pOTA->deviceID);
                                 pOTA->OTAStart = 1;                      
-                                LOG("Start OTA try %d, CAN ID 0x%x BMU %d\r\n", ReOtaFlag + 1, CurrentOTADeviceCanID, i);
+                                LOG("[OTA] Start OTA try %d, CAN ID 0x%x BMU %d\r\n", ReOtaFlag + 1, CurrentOTADeviceCanID, i);
                                 XCP_OTA(pOTA);
 
                                 // printf("xcpstatus.ErrorReg  %d, pOTA->OTAStart %d, xcpstatus.DeviceProgramOkFlag %d\r\n",xcpstatus.ErrorReg, pOTA->OTAStart,xcpstatus.DeviceProgramOkFlag);
                                 if ((xcpstatus.ErrorReg == 0) && (pOTA->OTAStart == 0))
                                 {
-                                    LOG("CAN ID 0x%x BMU OTA success!\r\n", pOTA->deviceID);
+                                    LOG("[OTA] CAN ID 0x%x BMU OTA success!\r\n", pOTA->deviceID);
                                     break;
                                 }
                                 else
                                 {
                                     ReOtaFlag++;
-                                    LOG("CAN ID 0x%x BMU OTA failed, retry count: %d\r\n", pOTA->deviceID, ReOtaFlag);
+                                    LOG("[OTA] CAN ID 0x%x BMU OTA failed, retry count: %d\r\n", pOTA->deviceID, ReOtaFlag);
                                 }
                             }
                             sleep(2);
@@ -297,10 +297,10 @@ void *OTA_Upgrad_Task(void *arg)
                             if(percentage == 100){
                                 set_modbus_reg_val(OTASTATUSREGADDR, OTASUCCESS);
                             }
-                            LOG("STEP %2d: %3d%%\n", i, percentage);
+                            LOG("[OTA] STEP %2d: %3d%%\n", i, percentage);
                         }
                     }else{
-                        LOG("CAN3 is not ready\r\n");
+                        LOG("[OTA] CAN3 is not ready\r\n");
                     }
                     
                 }
@@ -319,12 +319,12 @@ void OTAUpgradTaskCreate(void)
         ret = pthread_create(&OTAUpgrad_TASKHandle, NULL, OTA_Upgrad_Task, &otactrl);
         if (ret != 0)
         {
-            LOG("Failed to create SerialLedTask thread : %s", strerror(ret));
+            LOG("[OTA] Failed to create SerialLedTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("SerialLedTask thread created successfully.\r\n");
+            LOG("[OTA] SerialLedTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

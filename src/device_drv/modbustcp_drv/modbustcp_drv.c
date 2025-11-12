@@ -241,7 +241,7 @@ static int RTC_ModBus_Deal(uint16_t address, uint16_t data)
 		set_TCU_TimeCalFlg(1);
 
 		update_system_time(&TmData);
-		LOG("RTC_ModBus_Deal\r\n");
+		LOG("[ModbusTcp] RTC_ModBus_Deal\r\n");
 		for (int i = 0; i < 3; i++)
 		{
 			bms_CANSendFcn();

@@ -25,7 +25,7 @@
 
 
 char matched_filename[256] = {0};
-#define TCU_LOG_FILENAME       "/usr/xcharge/log/App_project.log"   /*LOG文件名*/
+#define TCU_LOG_FILENAME       "/opt/xcharge/log/App_project.log"   /*LOG文件名*/
 
 pthread_mutex_t 				Log_DebugOut_mutex_lock;
 
@@ -91,18 +91,18 @@ int upgarde_file_type(const char *filename,const char *filetype)
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_ECU_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
-        LOG("ret:%d \r\n",ret);
+        LOG("[Ocpp] ret:%d \r\n",ret);
         if(ret == 0)
         {
             //标志位
 			sleep(1);
             otactrl.deviceType =ECU;
 			otactrl.deviceID = 0;
-            LOG("ECU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
-            LOG("otafilenamestr: %s\r\n",filetype);
+            LOG("[Ocpp]ECU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            LOG("[Ocpp]otafilenamestr: %s\r\n",filetype);
             memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
             memcpy(otactrl.OTAFilename, filetype, strlen(filetype));
-            LOG("otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
+            LOG("[Ocpp]otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
             otactrl.OTAStart = 1;
         }
         return ret;

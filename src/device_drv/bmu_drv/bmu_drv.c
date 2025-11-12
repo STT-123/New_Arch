@@ -43,13 +43,13 @@ bool BMU_Init(void)
 
     if (can_ifconfig_init(BMU_CAN_DEVICE_NAME, BMU_CAN_BITRATE) == false)
     {
-        LOG("%s can_ifconfig_init 失败\n", BMU_CAN_DEVICE_NAME);
+        LOG("[BMU] %s can_ifconfig_init 失败\n", BMU_CAN_DEVICE_NAME);
         return false;
     }
 
     while (can_band_init(BMU_CAN_DEVICE_NAME, &BMU_CAN_FD) == false)
     {
-        LOG("%s can_band_init 失败，重试中...\n", BMU_CAN_DEVICE_NAME);
+        LOG("[BMU]%s can_band_init 失败，重试中...\n", BMU_CAN_DEVICE_NAME);
         sleep(1);
     }
 
@@ -59,7 +59,7 @@ bool BMU_Init(void)
     ev.data.ptr = (void *)&bmuCanEventData;
     if (-1 == my_epoll_addtast(bmuCanEventData.fd, &ev))
     {
-        LOG("%s add epoll failed \n", BMU_CAN_DEVICE_NAME);
+        LOG("[BMU]%s add epoll failed \n", BMU_CAN_DEVICE_NAME);
         return false;
     }
 

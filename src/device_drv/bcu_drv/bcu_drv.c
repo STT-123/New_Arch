@@ -17,10 +17,10 @@ static int Drv_bcu_resetcan_device(const char *can_name)
     int canState = 0;
     HAL_can_get_state(can_name, &canState);
     if (canState != 0) {
-        LOG("%s status is %02X\r\n", can_name, canState);
+        LOG("[BCU]%s status is %02X\r\n", can_name, canState);
         HAL_can_closeEx(&BCU_CAN_FD);
         if (can_ifconfig_init(BCU_CAN_DEVICE_NAME, BCU_CAN_BITRATE) == false){
-            LOG("can_ifconfig_init 失败\n");
+            LOG("[BCU]can_ifconfig_init 失败\n");
             return false;
         }
 
@@ -103,13 +103,13 @@ bool BCU_Init(void)
 
     if (can_ifconfig_init(BCU_CAN_DEVICE_NAME, BCU_CAN_BITRATE) == false)
     {
-        LOG("%s can_ifconfig_init 失败\n", BCU_CAN_DEVICE_NAME);
+        LOG("[BCU]%s can_ifconfig_init 失败\n", BCU_CAN_DEVICE_NAME);
         return false;
     }
 
     while (can_band_init(BCU_CAN_DEVICE_NAME, &BCU_CAN_FD) == false)
     {
-        LOG("%s can_band_init 失败，重试中...\n", BCU_CAN_DEVICE_NAME);
+        LOG("[BCU]%s can_band_init 失败，重试中...\n", BCU_CAN_DEVICE_NAME);
         sleep(1);
     }
 
@@ -119,7 +119,7 @@ bool BCU_Init(void)
     ev.data.ptr = (void *)&bcuCanEventData;
     if (-1 == my_epoll_addtast(bcuCanEventData.fd, &ev))
     {
-        LOG("%s add epoll failed \n", BCU_CAN_DEVICE_NAME);
+        LOG("[BCU]%s add epoll failed \n", BCU_CAN_DEVICE_NAME);
         return false;
     }
 

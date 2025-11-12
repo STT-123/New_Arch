@@ -11,7 +11,7 @@ unsigned short g_ota_flag = 0;
 // 检查挂载点是否存在
 
 
-void *Func_file_write_task(void *arg)
+void *SDCardDataSaveTask(void *arg)
 {
     const char *mount_point = USB_MOUNT_POINT; // 使用自动挂载的路径
 
@@ -69,7 +69,7 @@ void SDCardDataSaveTaskCreate(void)
     int ret;
     do
     {
-        ret = pthread_create(&SDCardDataSave_TASKHandle, NULL, Func_file_write_task, NULL);
+        ret = pthread_create(&SDCardDataSave_TASKHandle, NULL, SDCardDataSaveTask, NULL);
         if (ret != 0)
         {
             LOG("[SD Card] Failed to create SDCardDataSaveTaskCreate thread : %s", strerror(ret));

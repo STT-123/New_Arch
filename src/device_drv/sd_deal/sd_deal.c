@@ -41,12 +41,12 @@ static int mount_sdcard_fat32(void)
     const char *mount_point = USB_MOUNT_POINT ;
     int ret;
     
-    //LOG("开始挂载FAT32格式的SD卡...\n");
+    //LOG("[SD Card] 开始挂载FAT32格式的SD卡...\n");
     
     // 1. 检查设备是否存在
     struct stat st;
     if (stat(device, &st) == -1) {
-        LOG("错误: 设备 %s 不存在\n", device);
+        LOG("[SD Card] 错误: 设备 %s 不存在\n", device);
         return -1;
     }
     
@@ -57,7 +57,7 @@ static int mount_sdcard_fat32(void)
         while (fgets(line, sizeof(line), fp)) {
             if (strstr(line, mount_point)) {
                 fclose(fp);
-                //LOG("SD卡已经挂载在 %s\n", mount_point);
+                //LOG("[SD Card] SD卡已经挂载在 %s\n", mount_point);
                 return 0;
             }
         }
@@ -67,7 +67,7 @@ static int mount_sdcard_fat32(void)
     // 3. 创建挂载点
     if (mkdir(mount_point, 0755) == -1) {
         if (errno != EEXIST) {
-            LOG("创建挂载点失败: %s\n", strerror(errno));
+            LOG("[SD Card] 创建挂载点失败: %s\n", strerror(errno));
             return -1;
         }
     }
@@ -75,19 +75,19 @@ static int mount_sdcard_fat32(void)
     ret = mount(device, mount_point, "vfat", 0, "iocharset=utf8");
     
     if (ret == 0) {
-        LOG("FAT32 SD卡挂载成功\n");
+        LOG("[SD Card] FAT32 SD卡挂载成功\n");
         return 0;
     } else {
-        LOG("FAT32挂载失败: %s\n", strerror(errno));
+        LOG("[SD Card] FAT32挂载失败: %s\n", strerror(errno));
         
         // 尝试不带字符集参数
-        LOG("尝试不带字符集参数挂载...\n");
+        LOG("[SD Card] 尝试不带字符集参数挂载...\n");
         ret = mount(device, mount_point, "vfat", 0, NULL);
         if (ret == 0) {
-            LOG("FAT32 SD卡挂载成功(无字符集)\n");
+            LOG("[SD Card] FAT32 SD卡挂载成功(无字符集)\n");
             return 0;
         } else {
-            LOG("最终挂载失败: %ensure_mount_points\n", strerror(errno));
+            LOG("[SD Card] 最终挂载失败: %ensure_mount_points\n", strerror(errno));
             return -1;
         }
     }
@@ -130,7 +130,7 @@ static int GetNowTime(struct tm *nowTime)
         timeinfo.tm_sec = get_BCU_TimeSencondValue();
         timeinfo.tm_isdst = -1;
         if (mktime(&timeinfo) == (time_t)-1) {
-            LOG("WARNING: mktime failed for BCU time\n");
+            LOG("[SD Card] WARNING: mktime failed for BCU time\n");
             // 设置一个默认的星期几
             timeinfo.tm_wday = 0; // 星期日
         }
@@ -139,11 +139,11 @@ static int GetNowTime(struct tm *nowTime)
         {
             // 执行实际的时间更新操作
             G_set_system_time_from_bcu();
-            LOG("update time\r\n");
+            LOG("[SD Card] update time\r\n");
             // 更新最后更新时间
             last_update_time = current_time;
         }
-        // LOG("[SD Card] Time Source From Bcu");
+        // LOG("[SD Card] [SD Card] Time Source From Bcu");
     }
     else // bcu没发过来时间 用自己本地的时间
     {
@@ -151,12 +151,12 @@ static int GetNowTime(struct tm *nowTime)
         struct tm *tm_info = localtime(&now);
         timeinfo = *tm_info;
         mktime(&timeinfo);
-        LOG("[SD Card] Time Source From Local");
+        LOG("[SD Card] [SD Card] Time Source From Local");
     }
 
     // 得到当前时间
     *nowTime = timeinfo;
-    // LOG("[SD Card] Now Time: %d-%d-%d %d:%d:%d. ", timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    // LOG("[SD Card] [SD Card] Now Time: %d-%d-%d %d:%d:%d. ", timeinfo.tm_year, timeinfo.tm_mon, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     return 0;
 }
 /**
@@ -181,7 +181,7 @@ static int CreateAscFilePathWithTime(struct tm timeInfo, char *filePath)
         if (mkdir(folderPath, 0777) == -1)
         {
             perror("mkdir failed");
-            LOG("[SD Card] mkdir failed");
+            LOG("[SD Card] [SD Card] mkdir failed");
             return 1;
         }
     }
@@ -211,7 +211,7 @@ static int OpenNowWriteAscFile(const char *filePath, FILE **file) {
     static int failed_count = 0;
     
     if (!filePath || !file) {
-        LOG("ERROR: Invalid parameters to OpenNowWriteAscFile\n");
+        LOG("[SD Card] ERROR: Invalid parameters to OpenNowWriteAscFile\n");
         return 1;
     }
     
@@ -221,7 +221,7 @@ static int OpenNowWriteAscFile(const char *filePath, FILE **file) {
     
     if (!*file) {
         int err = errno;
-        LOG("ERROR: fopen failed for %s, errno=%d (%s)\n", filePath, err, strerror(err));
+        LOG("[SD Card] ERROR: fopen failed for %s, errno=%d (%s)\n", filePath, err, strerror(err));
         failed_count++;
         
         if (failed_count >= 5) {
@@ -236,7 +236,7 @@ static int OpenNowWriteAscFile(const char *filePath, FILE **file) {
         set_emcu_fault(SD_FAULT, SET_RECOVER);
     }
     failed_count = 0;
-    // LOG("SUCCESS: File opened successfully: %p\n", (void*)*file);
+    // LOG("[SD Card] SUCCESS: File opened successfully: %p\n", (void*)*file);
     return 0;
 }
 
@@ -246,22 +246,22 @@ static int OpenNowWriteAscFile(const char *filePath, FILE **file) {
  * */ 
 static int AscFileWriteTimeHeader(FILE *file, struct tm *timeinfo)
 {
-    LOG("=== AscFileWriteTimeHeader START ===\n");
+    LOG("[SD Card] === AscFileWriteTimeHeader START ===\n");
     
     if (file == NULL)
     {
-        LOG("CRITICAL ERROR: File pointer is NULL in AscFileWriteTimeHeader\n");
+        LOG("[SD Card] CRITICAL ERROR: File pointer is NULL in AscFileWriteTimeHeader\n");
         return -1;
     }
     
     if (timeinfo == NULL)
     {
-        LOG("CRITICAL ERROR: timeinfo is NULL in AscFileWriteTimeHeader\n");
+        LOG("[SD Card] CRITICAL ERROR: timeinfo is NULL in AscFileWriteTimeHeader\n");
         return -1;
     }
     
     // 验证时间字段的合理性
-    LOG("Time info: wday=%d, mon=%d, mday=%d, hour=%d, min=%d, sec=%d, year=%d\n",
+    LOG("[SD Card] Time info: wday=%d, mon=%d, mday=%d, hour=%d, min=%d, sec=%d, year=%d\n",
            timeinfo->tm_wday, timeinfo->tm_mon, timeinfo->tm_mday,
            timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec,
            timeinfo->tm_year);
@@ -273,11 +273,11 @@ static int AscFileWriteTimeHeader(FILE *file, struct tm *timeinfo)
 
     // 检查数组索引边界
     if (timeinfo->tm_wday < 0 || timeinfo->tm_wday > 6) {
-        LOG("ERROR: Invalid tm_wday: %d\n", timeinfo->tm_wday);
+        LOG("[SD Card] ERROR: Invalid tm_wday: %d\n", timeinfo->tm_wday);
         return -1;
     }
     if (timeinfo->tm_mon < 0 || timeinfo->tm_mon > 11) {
-        LOG("ERROR: Invalid tm_mon: %d\n", timeinfo->tm_mon);
+        LOG("[SD Card] ERROR: Invalid tm_mon: %d\n", timeinfo->tm_mon);
         return -1;
     }
 
@@ -296,32 +296,32 @@ static int AscFileWriteTimeHeader(FILE *file, struct tm *timeinfo)
                             (timeinfo->tm_hour >= 12) ? "PM" : "AM",
                             timeinfo->tm_year + 1900);
     
-    LOG("Header length: %d, buffer size: %zu\n", total_len, sizeof(header));
+    LOG("[SD Card] Header length: %d, buffer size: %zu\n", total_len, sizeof(header));
     
     if (total_len < 0) {
-        LOG("ERROR: snprintf failed\n");
+        LOG("[SD Card] ERROR: snprintf failed\n");
         return -1;
     }
     
     if ((size_t)total_len >= sizeof(header)) {
-        LOG("ERROR: Header too long: %d >= %zu\n", total_len, sizeof(header));
+        LOG("[SD Card] ERROR: Header too long: %d >= %zu\n", total_len, sizeof(header));
         return -1;
     }
     
-    LOG("Header content:\n%s", header);
+    LOG("[SD Card] Header content:\n%s", header);
     
     // 写入文件
     size_t written = fwrite(header, 1, total_len, file);
-    LOG("Bytes written: %zu, expected: %d\n", written, total_len);
+    LOG("[SD Card] Bytes written: %zu, expected: %d\n", written, total_len);
     
     if (written != (size_t)total_len)
     {
-        LOG("WARNING: Header not fully written to file: %zu != %d\n", written, total_len);
+        LOG("[SD Card] WARNING: Header not fully written to file: %zu != %d\n", written, total_len);
         return -1;
     }
     
     fflush(file); // 确保数据写入磁盘
-    LOG("=== AscFileWriteTimeHeader COMPLETED SUCCESSFULLY ===\n");
+    LOG("[SD Card] === AscFileWriteTimeHeader COMPLETED SUCCESSFULLY ===\n");
     return 0;
 }
 
@@ -403,7 +403,7 @@ static void Drv_write_canmsg_cache_to_file(FILE *file, uint32_t timestamp_ms)
 {
     if (file == NULL)
     {
-        LOG("Error: File pointer is NULL.\n");
+        LOG("[SD Card] Error: File pointer is NULL.\n");
         return;
     }
 
@@ -470,14 +470,14 @@ static void Drv_write_canmsg_cache_to_file(FILE *file, uint32_t timestamp_ms)
         if (err != 0)
         {
             perror("fseek");
-            LOG("Failed to seek to end of file\n");
+            LOG("[SD Card] Failed to seek to end of file\n");
             return;
         }
 
         err = fwrite(timeStampedMessage, 1, offset, file);
         if (err != offset)
         {
-            LOG("Failed to write to file\n");
+            LOG("[SD Card] Failed to write to file\n");
             return;
         }
     }
@@ -490,13 +490,13 @@ static int judgeTimetoUpdate(void)
     static int last_month = 0;
     static int last_day = 0;
     
-    LOG("Current time: %d-%d-%d, Last time: %d-%d-%d\n", 
+    LOG("[SD Card] Current time: %d-%d-%d, Last time: %d-%d-%d\n", 
         get_BCU_TimeYearValue(), get_BCU_TimeMonthValue(), get_BCU_TimeDayValue(),
         last_year, last_month, last_day);
 
     // 检查时间数据是否有效
     if (get_BCU_TimeYearValue() == 0 || get_BCU_TimeMonthValue() == 0 || get_BCU_TimeDayValue() == 0) {
-        LOG("Time invalid, skip check\n");
+        LOG("[SD Card] Time invalid, skip check\n");
         return 0;
     }
 
@@ -506,7 +506,7 @@ static int judgeTimetoUpdate(void)
         (get_BCU_TimeDayValue() != last_day)) 
     {
         
-        LOG("TIME CHANGE DETECTED: %d-%d-%d -> %d-%d-%d\n", 
+        LOG("[SD Card] TIME CHANGE DETECTED: %d-%d-%d -> %d-%d-%d\n", 
             last_year, last_month, last_day,
             get_BCU_TimeYearValue(), get_BCU_TimeMonthValue(), get_BCU_TimeDayValue());
 
@@ -617,7 +617,7 @@ static void Func_DeleteOldestFolder(void)
         char path[512];
         snprintf(path, sizeof(path), "%s/%s", USB_MOUNT_POINT, folders[0]);
 
-        LOG("Deleting oldest folder: %s\n", path);
+        LOG("[SD Card] Deleting oldest folder: %s\n", path);
         Drv_remove_directory(path);
 
         for (int i = 0; i < folderCount; i++)
@@ -639,17 +639,17 @@ int ensure_mount_point(const char *path)
         if (mkdir(path, 0777) == -1)
         {
             perror("创建挂载目录失败");
-            LOG("请检查挂载点路径是否正确\n");
+            LOG("[SD Card] 请检查挂载点路径是否正确\n");
             return -1;
         }
         else
         {
-            LOG("创建挂载目录成功\n");
+            LOG("[SD Card] 创建挂载目录成功\n");
         }
     }
     else
     {
-        LOG("挂载点已存在\n");
+        LOG("[SD Card] 挂载点已存在\n");
     }
     return 0;
 }
@@ -764,13 +764,13 @@ void Drv_write_buffer_to_file(DoubleRingBuffer *drb)
     ret = pthread_mutex_lock(&inactiveBuffer->mutex);
     if (ret != 0)
     {
-        LOG("write_buffer_to_file end return. \n");
+        LOG("[SD Card] write_buffer_to_file end return. \n");
         return;
     }
     
     if (mount_sdcard_fat32() != 0)// 先检查存储器状态 不存在 标记错误 直接退出
     {
-        LOG("SD_FAULT\r\n");
+        LOG("[SD Card] SD_FAULT\r\n");
         set_emcu_fault(SD_FAULT, SET_ERROR);
         goto QUIT_FLAG;
     }
@@ -789,16 +789,16 @@ void Drv_write_buffer_to_file(DoubleRingBuffer *drb)
     
     if (OpenNowWriteAscFile(filePath, &file) != 0  || file == NULL)
     {
-        LOG("ERROR: OpenNowWriteAscFile failed for: %s\n", filePath);
+        LOG("[SD Card] ERROR: OpenNowWriteAscFile failed for: %s\n", filePath);
         goto QUIT_FLAG; // 打开失败 直接返回
     }
   
     if (newFileNeeded)// 如果是新创建的文件
     {
-        LOG("9. Writing headers for new file\n");
+        LOG("[SD Card] 9. Writing headers for new file\n");
         // 先写入当前文件头
         if (AscFileWriteTimeHeader(file, &nowTimeInfo) != 0) {
-            LOG("ERROR: Failed to write time header\n");
+            LOG("[SD Card] ERROR: Failed to write time header\n");
         } else {
             //printf("9.1 Time header written\n");
         }
@@ -863,9 +863,9 @@ void Drv_write_buffer_to_file(DoubleRingBuffer *drb)
     // 2. 系统中不存在当前日志命名的文件夹（日期变化了）
     if ((fileSize > (10*1024*1024) )|| (judgeTimetoUpdate())) // 大于10M或者年月日发生变化
     {
-        LOG("fileSize = %ld\r\n",fileSize);
+        LOG("[SD Card] fileSize = %ld\r\n",fileSize);
 
-        LOG("judgeTimetoUpdate = %d\r\n",judgeTimetoUpdate());
+        LOG("[SD Card] judgeTimetoUpdate = %d\r\n",judgeTimetoUpdate());
         newFileNeeded = true; // 下一轮就要创建新文件
     }
     
@@ -886,12 +886,12 @@ int SD_Initialize(void)
 
     if (res != 0)
     {
-        LOG("umount failed (maybe not mounted):%d\n", res);
+        LOG("[SD Card] umount failed (maybe not mounted):%d\n", res);
         return res;
     }
     else
     {
-        LOG("umount success\n");
+        LOG("[SD Card] umount success\n");
     }
 
     char cmd[256];
@@ -902,24 +902,24 @@ int SD_Initialize(void)
     res = system(cmd);
     if (res != 0)
     {
-        LOG("Format failed: %d\n", res);
+        LOG("[SD Card] Format failed: %d\n", res);
         return res;
     }
     else
     {
-        LOG("Format (FAT32) success\n");
+        LOG("[SD Card] Format (FAT32) success\n");
     }
 
     snprintf(cmd, sizeof(cmd), "mount %s %s", device, mount_point);
     res = system(cmd);
     if (res != 0)
     {
-        LOG("Mount failed: %d\n", res);
+        LOG("[SD Card] Mount failed: %d\n", res);
         return res;
     }
     else
     {
-        LOG("Mount success\n");
+        LOG("[SD Card] Mount success\n");
     }
 
     usleep(100 * 1000);
@@ -936,7 +936,7 @@ void checkSDCardCapacity(void)
     struct statvfs stat;
     if (statvfs(USB_MOUNT_POINT, &stat) != 0)
     {
-        LOG("Failed to get SD card capacity.\n");
+        LOG("[SD Card] Failed to get SD card capacity.\n");
         usleep(CHECKSD_TRIGGERING_TIME);
     }
     uint64_t total = (uint64_t)stat.f_blocks * (uint64_t)stat.f_frsize;

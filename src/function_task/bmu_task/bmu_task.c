@@ -11,7 +11,7 @@ void *BMU_DealTask(void *arg)
 {
     // struct can_frame canrev_frame;
     CAN_MESSAGE canrev_frame;
-    LOG("Func_thread_can1_dealwith is running\n");
+    LOG("[BMU] Func_thread_can1_dealwith is running\n");
     int err = 0;
     while (1)
     {
@@ -45,12 +45,12 @@ void BMU_DealTaskCreate(void)
         ret = pthread_create(&BMURecvDel_TASKHandle, NULL, BMU_DealTask, NULL);
         if (ret != 0)
         {
-            LOG("Failed to create BMU_DealTask thread : %s", strerror(ret));
+            LOG("[BMU] Failed to create BMU_DealTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("BMU_DealTask thread created successfully.\r\n");
+            LOG("[BMU] BMU_DealTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

@@ -405,7 +405,7 @@ int can_monitor_fun(void) {
     // 检查 can2
 	int can2_state = check_can_state(BCU_CAN_DEVICE_NAME);
 	if (can2_state == 0 && g_can2_ready == 1) {
-		LOG("can2 abnormal, restarting...\n");
+		LOG("[Check] can2 abnormal, restarting...\n");
 		restart_can_interface(BCU_CAN_DEVICE_NAME);
 	}
 	g_can2_ready = can2_state;
@@ -413,7 +413,7 @@ int can_monitor_fun(void) {
 	// 检查 can3
 	int can3_state = check_can_state(BMU_CAN_DEVICE_NAME);
 	if (can3_state == 0 && g_can3_ready == 1) {
-		LOG("can3 abnormal, restarting...\n");
+		LOG("[Check] can3 abnormal, restarting...\n");
 		restart_can_interface("can3");
 	}
 	g_can3_ready = can3_state;
@@ -422,7 +422,7 @@ int can_monitor_fun(void) {
 
 // 重启CAN接口
 static void restart_can_interface(const char* can_if) {
-    LOG("Restarting %s...\n", can_if);
+    LOG("[Check] Restarting %s...\n", can_if);
     char cmd[128];
     
     snprintf(cmd, sizeof(cmd), "sudo /bin/ip link set %s down", can_if);

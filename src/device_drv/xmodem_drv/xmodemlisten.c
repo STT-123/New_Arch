@@ -55,26 +55,26 @@ void* Lwip_Listen_TASK(void* param)
             {
                 pthread_mutex_lock(&task_mutex); // 临界区保护
                 if (pthread_create(pLwIPTCPDataTaskHandle, NULL, lwip_data_TASK, NULL) == 0) {
-                    LOG("create lwip_data_TASK success\n");
+                    LOG("[Xmodem] create lwip_data_TASK success\n");
                 } else {
-                    LOG("create lwip_data_TASK failed\n");
+                    LOG("[Xmodem] create lwip_data_TASK failed\n");
                 }
                 pthread_mutex_unlock(&task_mutex);
             }
             else
             {
-                LOG("lwip_data_TASK already running!\n");
+                LOG("[Xmodem] lwip_data_TASK already running!\n");
             }
         }
         else
         {
-            LOG("otasock1 error: %d\n", otasock1);
+            LOG("[Xmodem] otasock1 error: %d\n", otasock1);
         }
 
         // 防止任务卡死
         usleep(100 * 1000); // 等价于 vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 
-    LOG("Lwip_Listen_TASK exited\n");
+    LOG("[Xmodem] Lwip_Listen_TASK exited\n");
     return NULL;
 }

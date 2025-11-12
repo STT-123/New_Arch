@@ -102,7 +102,7 @@ void *lwip_data_TASK(void *param)
 						setXmodemServerReceiveSOH(1);
 						if(GetOTAFILEInfo(&(tcp_server_recvbuf[3]),otafilenamestr, &filesize, &xmodempacknum) == 0)
 						{
-							LOG("File name %s filesize %d packnum %d\r\n", otafilenamestr, filesize, xmodempacknum);
+							LOG("[Xmodem] File name %s filesize %d packnum %d\r\n", otafilenamestr, filesize, xmodempacknum);
 							findfirstpack = 1;
 							curpackno = 0;
 							prvpackno = 0;
@@ -179,7 +179,7 @@ void *lwip_data_TASK(void *param)
 										otadeviceType = 0;
 										delete_files_with_prefix("USB_MOUNT_POINT", "XC");
 										printf("Invalid upgrade file\r\n");
-										LOG("Invalid upgrade file\r\n");
+										LOG("[Xmodem] Invalid upgrade file\r\n");
 										setXmodemServerReceiveFileEnd(1);
 										set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);;
 
@@ -194,14 +194,14 @@ void *lwip_data_TASK(void *param)
 									otadeviceType = 0;
 									if (fclose(&OTAfil) != 0)
 									{
-										LOG("Error file close failed err code!\r\n");
+										LOG("[Xmodem] Error file close failed err code!\r\n");
 									}
 									else
 									{
-										LOG("file closed successfully!\r\n");
+										LOG("[Xmodem] file closed successfully!\r\n");
 									}
 									delete_files_with_prefix("0:", "XC");
-									LOG("Failed to write upgrade file\r\n");
+									LOG("[Xmodem] Failed to write upgrade file\r\n");
 									setXmodemServerReceiveFileEnd(1);
 									set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
 									set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
@@ -219,14 +219,14 @@ void *lwip_data_TASK(void *param)
 									otadeviceType = 0;
 									if (fclose(&OTAfil) != 0)
 									{
-										LOG("Error file close failed err code!\r\n");
+										LOG("[Xmodem] Error file close failed err code!\r\n");
 									}
 									else
 									{
-										LOG("file closed successfully!\r\n");
+										LOG("[Xmodem] file closed successfully!\r\n");
 									}
 									delete_files_with_prefix("0:", "XC");
-									LOG("Failed to write upgrade file\r\n");
+									LOG("[Xmodem] Failed to write upgrade file\r\n");
 									// XmodemServerReceiveFileEnd = 1;
 									setXmodemServerReceiveFileEnd(1);
 									set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
@@ -475,14 +475,14 @@ void *lwip_data_TASK(void *param)
 								otadeviceType = 0;
 								if (fclose(&OTAfil) != 0)
 								{
-									LOG("Error file close failed err code!\r\n");
+									LOG("[Xmodem] Error file close failed err code!\r\n");
 								}
 								else
 								{
-									LOG("file closed successfully!\r\n");
+									LOG("[Xmodem] file closed successfully!\r\n");
 								}
 								delete_files_with_prefix("0:", "XC");
-								LOG("Failed to write upgrade file\r\n");
+								LOG("[Xmodem] Failed to write upgrade file\r\n");
 								// XmodemServerReceiveFileEnd = 1;
 								setXmodemServerReceiveFileEnd(1);
 //									set_emcu_fault(SD_FAULT,SET_ERROR);
@@ -503,15 +503,15 @@ void *lwip_data_TASK(void *param)
 								otadeviceType = 0;
 								if (fclose(&OTAfil) != 0)
 								{
-									LOG("Error file close failed err code!\r\n");
+									LOG("[Xmodem] Error file close failed err code!\r\n");
 								}
 								else
 								{
-									LOG("file closed successfully!\r\n");
+									LOG("[Xmodem] file closed successfully!\r\n");
 								}
 
 								delete_files_with_prefix("0:", "XC");
-								LOG("Failed to write upgrade file\r\n");
+								LOG("[Xmodem] Failed to write upgrade file\r\n");
 								setXmodemServerReceiveFileEnd(1);
 								set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
 								set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
@@ -577,7 +577,7 @@ void *lwip_data_TASK(void *param)
 								otactrl.OTAFileType = 0;
 								if(strstr(otafilenamestr1, "ECU") != NULL)
 								{
-									LOG("ECU tar.bz2 file\r\n");
+									LOG("[Xmodem] ECU tar.bz2 file\r\n");
 									otactrl.deviceType = otadeviceType;
 									memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
 									memcpy(otactrl.OTAFilename, otafilenamestr, strlen(otafilenamestr));
@@ -631,14 +631,14 @@ void *lwip_data_TASK(void *param)
 
 		if(getXmodemServerReceiveFileEnd())
 		{
-			LOG("receive file end!\r\n");
+			LOG("[Xmodem] receive file end!\r\n");
 			uint32_t starttime = OsIf_GetMilliseconds();
 			while(1)
 			{
 				uint32_t time = OsIf_GetMilliseconds()-starttime;
 
 				{
-					LOG("wait XmodemServerReceiveEOT over !\r\n");
+					LOG("[Xmodem] wait XmodemServerReceiveEOT over !\r\n");
 					setXmodemServerEnd(1);
 					setXmodemServerReceiveEOT(0);
 					setXmodemServerReceiveFileEnd(0);
@@ -648,7 +648,7 @@ void *lwip_data_TASK(void *param)
 				{
 					tcp_server_Txbuf[0] = CAN;
 					write(otasock1, tcp_server_Txbuf, 1);
-					LOG("wait XmodemServerReceiveEOT over 10s exit!\r\n");
+					LOG("[Xmodem] wait XmodemServerReceiveEOT over 10s exit!\r\n");
 					setXmodemServerEnd(1);
 					setXmodemServerReceiveEOT(0);
 					setXmodemServerReceiveFileEnd(0);

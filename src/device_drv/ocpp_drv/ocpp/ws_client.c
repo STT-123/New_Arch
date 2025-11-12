@@ -124,7 +124,7 @@ void *websocket_client_thread(void *arg)
         struct lws *wsi = lws_client_connect_via_info(&ccinfo);
         if (!wsi)
         {
-            LOG("WebSocket connection failed, retrying...");
+            LOG("[Ocpp]WebSocket connection failed, retrying...");
         }
 
         while (lws_service(context, 1000) >= 0)

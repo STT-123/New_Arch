@@ -15,7 +15,7 @@ void *BCU_DealTask(void *arg)
 {
     struct canfd_frame canrev_frame = {0};
     CANFD_MESSAGE can_msg_buf ={0};
-    LOG("Func_thread_can0_dealwith is running\n");
+    LOG("[BCU] Func_thread_can0_dealwith is running\n");
     int len = 0;
     int bms_analysis_done = 0;
     struct timespec start_time;
@@ -54,7 +54,7 @@ void *BCU_DealTask(void *arg)
                         Drv_BMS_Analysis(0);
 
                         bms_analysis_done = 1;
-                        LOG("Drv_BMS_Analysis executed after 10s delay\r\n");
+                        LOG("[BCU] Drv_BMS_Analysis executed after 10s delay\r\n");
                     }
                 }
             }
@@ -73,12 +73,12 @@ void BCU_DealTaskCreate(void)
         ret = pthread_create(&BCURecDel_TASKHandle, NULL, BCU_DealTask, NULL);
         if (ret != 0)
         {
-            LOG("Failed to create BCU_DealTask thread : %s", strerror(ret));
+            LOG("[BCU] Failed to create BCU_DealTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("BCU_DealTask thread created successfully.\r\n");
+            LOG("[BCU] BCU_DealTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

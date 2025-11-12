@@ -40,12 +40,12 @@ void *ModbusTCPServerTask(void *arg)
     }
     set_ip_address("eth1", modbus_ip);//设置当前机的网口的ip地址
     ctx = modbus_new_tcp(modbus_ip, 502);//新建一个tcp服务端
-    LOG("ctx =%d ,modbus ip =%s \r\n", ctx, modbus_ip);
+    LOG("[ModbusTcp] ctx =%d ,modbus ip =%s \r\n", ctx, modbus_ip);
 
     // 创建寄存器映射，只创建保持寄存器
     g_mb_mapping = modbus_mapping_new_start_address(0, 0, 0, 0, REGISTERS_START_ADDRESS, REGISTERS_NB, 0, 0);
     if (g_mb_mapping == NULL){
-        LOG("Failed to allocate the mapping: %s \r\n", modbus_strerror(errno));
+        LOG("[ModbusTcp] Failed to allocate the mapping: %s \r\n", modbus_strerror(errno));
         modbus_free(ctx);
         for (;;){
             usleep(5000);
@@ -79,7 +79,7 @@ void *ModbusTCPServerTask(void *arg)
              // 清理所有客户端连接
             for (master_socket = 0; master_socket <= fdmax; master_socket++){
                 if (FD_ISSET(master_socket, &refset) && master_socket != server_socket){ //判断当前fd是否为refset中的集合
-                    LOG("Closing connection on socket %d\n", master_socket);
+                    LOG("[ModbusTcp] Closing connection on socket %d\n", master_socket);
                     close(master_socket); // 关闭服务器套接字
                     FD_CLR(master_socket, &refset);// 从集合中移除
                     if (master_socket == fdmax){ fdmax--;}  // 更新最大文件描述符
@@ -106,12 +106,12 @@ void *ModbusTCPServerTask(void *arg)
                     newfd = accept(server_socket, (struct sockaddr *)&clientaddr, &addrlen); //任意客户端连接出错，客户端都关了
                     if (newfd == -1)
                     {
-                        LOG("Server accept() error: %s\n", strerror(errno));  // 出错时清理所有连接
+                        LOG("[ModbusTcp] Server accept() error: %s\n", strerror(errno));  // 出错时清理所有连接
                         for (master_socket = 0; master_socket <= fdmax; master_socket++)
                         {
                             if (FD_ISSET(master_socket, &refset) && master_socket != server_socket)
                             {
-                                // LOG("Closing connection on socket %d\n", master_socket);
+                                // LOG("[ModbusTcp] Closing connection on socket %d\n", master_socket);
                                 close(master_socket); // 关闭服务器套接字
                                 FD_CLR(master_socket, &refset);
                                 if (master_socket == fdmax)
@@ -129,7 +129,7 @@ void *ModbusTCPServerTask(void *arg)
                         {
                             fdmax = newfd;// 更新最大fd
                         }
-                        LOG("New connection from %s:%d on socket %d \r\n", inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
+                        LOG("[ModbusTcp] New connection from %s:%d on socket %d \r\n", inet_ntoa(clientaddr.sin_addr), clientaddr.sin_port, newfd);
                     }
                 }
                 else
@@ -146,7 +146,7 @@ void *ModbusTCPServerTask(void *arg)
                     }
                     else
                     {
-                        LOG("Connection closed or error on socket %d: %s\n", master_socket, modbus_strerror(errno));                       
+                        LOG("[ModbusTcp] Connection closed or error on socket %d: %s\n", master_socket, modbus_strerror(errno));                       
                         close(master_socket); // 关闭连接
                         FD_CLR(master_socket, &refset); // 从集合移除
 
@@ -178,10 +178,10 @@ void modbusTcpServerTaskCreate(void)
     {
         ret = pthread_create(&NetConfig_TASKHandle, NULL, ModbusTCPServerTask, NULL);
         if (ret != 0){
-            LOG("Failed to create NETConfigTask thread : %s", strerror(ret));
+            LOG("[ModbusTcp] Failed to create NETConfigTask thread : %s", strerror(ret));
             sleep(1);
         }else{
-            LOG("NETConfigTask thread created successfully.\r\n");
+            LOG("[ModbusTcp] NETConfigTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

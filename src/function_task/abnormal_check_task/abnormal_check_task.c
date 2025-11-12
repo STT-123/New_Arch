@@ -35,12 +35,12 @@ void AbnormalDetectionTaskCreate(void)
         ret = pthread_create(&AnormalDetectionTask_TASKHandle, NULL, AbnormalDetection, NULL);
         if (ret != 0)
         {
-            LOG("Failed to create AnormalDetectionTask thread : %s", strerror(ret));
+            LOG("[Check] Failed to create AnormalDetectionTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("AnormaletectionTask thread created successfully.\r\n");
+            LOG("[Check] AnormaletectionTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

@@ -25,7 +25,7 @@ void *XmodemCommTask(void *arg)
     static unsigned char times = 0;
     unsigned short times1 = 0;
 
-    LOG("TcpServerExample task!\n");
+    LOG("[Xmodem] TcpServerExample task!\n");
     signal(SIGPIPE, SIG_IGN);
     step = 1;
     while (1)
@@ -77,7 +77,7 @@ void *XmodemCommTask(void *arg)
 
                         if (pLwIPTCPListenTaskHandle == NULL || pLwIPTCPDataTaskHandle == NULL)
                         {
-                            LOG("TcpServerExample task malloc failed!\n");
+                            LOG("[Xmodem] TcpServerExample task malloc failed!\n");
                             while (1)
                             {
                                 usleep(1000 * 10000);
@@ -88,17 +88,17 @@ void *XmodemCommTask(void *arg)
 
                         *pLwIPTCPDataTaskHandle = NULL;
                         *pLwIPTCPListenTaskHandle = NULL;
-                        // LOG("TcpServerExample task malloc suceess!\n");
+                        // LOG("[Xmodem] TcpServerExample task malloc suceess!\n");
                         // 创建监听任务
                         int ret = pthread_create(pLwIPTCPListenTaskHandle, NULL, Lwip_Listen_TASK, NULL);
                         if (ret != 0)
                         {
-                            LOG("Failed to create Lwip_Listen xTaskCreate! thread : %s", strerror(ret));
+                            LOG("[Xmodem] Failed to create Lwip_Listen xTaskCreate! thread : %s", strerror(ret));
                             sleep(1);
                         }
                         else
                         {
-                            LOG("success to create Lwip_Listen xTaskCreate! thread");
+                            LOG("[Xmodem] success to create Lwip_Listen xTaskCreate! thread");
                         }
 
                         if (ret == 0)
@@ -120,14 +120,14 @@ void *XmodemCommTask(void *arg)
                             while (1)
                             {
                                 char c = 'C';
-                                LOG("write tcp message C to client! otasock1:  %d!\n", otasock1);
+                                LOG("[Xmodem] write tcp message C to client! otasock1:  %d!\n", otasock1);
                                 signed char ret = write(otasock1, &c, 1);
-                                LOG("write tcp message C to client ret %d!\n", ret);
-                                LOG("otasock1 %d!\n", otasock1);
+                                LOG("[Xmodem] write tcp message C to client ret %d!\n", ret);
+                                LOG("[Xmodem] otasock1 %d!\n", otasock1);
 
                                 if (ret == 1)
                                 {
-                                    LOG("write tcp message C to client!\n");
+                                    LOG("[Xmodem] write tcp message C to client!\n");
                                     XmodemSendCFlag = 1;
                                 }
 
@@ -138,25 +138,25 @@ void *XmodemCommTask(void *arg)
 
                                     if (getXmodemServerReceiveSOH())
                                     {
-                                        LOG("Received SOH!\n");
+                                        LOG("[Xmodem] Received SOH!\n");
                                         break;
                                     }
 
                                     if (RvPassTime >= 2000)
                                     {
-                                        LOG("Received SOH timeout!\n");
+                                        LOG("[Xmodem] Received SOH timeout!\n");
                                         times++;
-                                        LOG("times %d!\n", times);
+                                        LOG("[Xmodem] times %d!\n", times);
                                         break;
                                     }
 
                                     usleep(100000); // 100ms
                                 }
-                                LOG("getXmodemServerReceiveSOH()  = %d!\n", getXmodemServerReceiveSOH());
+                                LOG("[Xmodem] getXmodemServerReceiveSOH()  = %d!\n", getXmodemServerReceiveSOH());
                                 if (getXmodemServerReceiveSOH())
                                 {
                                     times = 0;
-                                    LOG("Received SOH!\n");
+                                    LOG("[Xmodem] Received SOH!\n");
                                     break;
                                 }
 
@@ -164,7 +164,7 @@ void *XmodemCommTask(void *arg)
                                 {
                                     times = 0;
                                     otactrl.UpDating = 0;
-                                    LOG("Write C 30 times over time!");
+                                    LOG("[Xmodem] Write C 30 times over time!");
                                     break;
                                 }
                             }
@@ -179,7 +179,7 @@ void *XmodemCommTask(void *arg)
                                 set_modbus_reg_val(OTASTATUSREGADDR, 0);
                                 set_modbus_reg_val(OTAPPROGRESSREGADDR, 0);
                                 printf("Without client connect over 60s, close xmodem tcp server!\n");
-                                LOG("Without client connect over 60s, close xmodem tcp server!");
+                                LOG("[Xmodem] Without client connect over 60s, close xmodem tcp server!");
                                 break;
                             }
                         }
@@ -257,10 +257,10 @@ void XmodemCommTaskCreate(void)
     {
         ret = pthread_create(&TcpServerExample_TASKHandle, NULL, XmodemCommTask, NULL);
         if (ret != 0){
-            LOG("Failed to create TcpServerExampleTask thread : %s", strerror(ret));
+            LOG("[Xmodem] Failed to create TcpServerExampleTask thread : %s", strerror(ret));
             sleep(1);
         } else{
-            LOG("TcpServerExampleTask thread created successfully.\r\n");
+            LOG("[Xmodem] TcpServerExampleTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

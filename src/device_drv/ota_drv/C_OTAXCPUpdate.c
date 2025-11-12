@@ -215,17 +215,17 @@ static int XCPCANOTAMSGParseMult(OTAObject *pOTA,XCPStatus *xcpstatus)
             //printf("XCPCANOTAMSGParse = %d\r\n",res);
 	        if ((res == 2) && (xcpstatus->XCPCMDResponseFlag == 1))
 	        {
-                LOG("pOTA->deviceID: 0x %x, OTA_RecvPacketCount = %d\r\n", pOTA->deviceID,(++OTA_RecvPacketCount));
+                LOG("[OTA] pOTA->deviceID: 0x %x, OTA_RecvPacketCount = %d\r\n", pOTA->deviceID,(++OTA_RecvPacketCount));
                 //printf("XCPCANOTAMSGParseMult_success\r\n");
 	        	return 0;
 	        }
             else{
-                LOG("XCPCANOTAMSGParse =  %d\r\n",res);//-4表示内部存在其他值，不是升级的反馈值，BCU不存在，BMU存在
+                LOG("[OTA] XCPCANOTAMSGParse =  %d\r\n",res);//-4表示内部存在其他值，不是升级的反馈值，BCU不存在，BMU存在
             }
 	    }
 		else if (GetTimeDifference_ms(xStartTime)>50 )//50->100
 		{
-            LOG("XCPCANOTAMSGParseMult_timeout\r\n");
+            LOG("[OTA] XCPCANOTAMSGParseMult_timeout\r\n");
 			return 1;
 		}
 	}
@@ -296,12 +296,12 @@ static int XcpTryConnectDevice(OTAObject *pOTA)
             if (pOTA->deviceType == BMU)
             {
                 res = XcpSendConnectCMD(pOTA->deviceID, 0);
-                LOG("XcpSendConnectCMD_res:%d\r\n",res);
+                LOG("[OTA] XcpSendConnectCMD_res:%d\r\n",res);
             }
             else
             {
                 res = XcpSendConnectCMD(pOTA->deviceID, 1);//发送0xFF
-                LOG("XcpSendConnectCMD_end res:%d\r\n",res);
+                LOG("[OTA] XcpSendConnectCMD_end res:%d\r\n",res);
             }
 
             static CAN_MESSAGE canmsg;
@@ -328,7 +328,7 @@ static int XcpTryConnectDevice(OTAObject *pOTA)
                 if (res == 0 && xcpstatus.DeviceConnectedFlag)
                 {
                     set_OTA_XCPConnect(0);//跳转成功，恢复初始状态。
-                    LOG("OK set_OTA_XCPConnect Can ID 0x%x device connected!\r\n", pOTA->deviceID);
+                    LOG("[OTA] OK set_OTA_XCPConnect Can ID 0x%x device connected!\r\n", pOTA->deviceID);
                     return 0;
 
                 }
@@ -338,7 +338,7 @@ static int XcpTryConnectDevice(OTAObject *pOTA)
                     printf("XcpTryConnectDevice_queue_pend_error 2222\r\n");
                     if(times >= xcpstatus.XCPCMDOuttimeTimes)
                     {
-                        LOG("Overtime %d times_1 ,Can ID 0x%x device connect failed!\r\n",  xcpstatus.XCPCMDOuttimeTimes, pOTA->deviceID);
+                        LOG("[OTA] Overtime %d times_1 ,Can ID 0x%x device connect failed!\r\n",  xcpstatus.XCPCMDOuttimeTimes, pOTA->deviceID);
                         memset(&xcpstatus, 0, sizeof(XCPStatus));
                         xcpstatus.ErrorReg |= 1 << 3;
                         xcpstatus.ErrorDeviceID = pOTA->deviceID;
@@ -353,7 +353,7 @@ static int XcpTryConnectDevice(OTAObject *pOTA)
                 times++;
                 if(times >= xcpstatus.XCPCMDOuttimeTimes)
                 {
-                    LOG("Overtime %d times_2 ,Can ID 0x%x device connect failed!\r\n", xcpstatus.XCPCMDOuttimeTimes, pOTA->deviceID);
+                    LOG("[OTA] Overtime %d times_2 ,Can ID 0x%x device connect failed!\r\n", xcpstatus.XCPCMDOuttimeTimes, pOTA->deviceID);
                     memset(&xcpstatus, 0, sizeof(XCPStatus));
                     xcpstatus.ErrorReg |= 1 << 3;
                     xcpstatus.ErrorDeviceID = pOTA->deviceID;
@@ -545,7 +545,7 @@ static int  SendOTACommand(OTAObject *pOTA, unsigned char *buf, unsigned int len
         else if( (result == 1 ) && (retry_count<5))
         {
             retry_count ++;
-            LOG("question_-----XCP_1111111 XCPCANOTAMSGParseMult   recv result: %d, retry_count: %d\r\n",result,retry_count);
+            LOG("[OTA] question_-----XCP_1111111 XCPCANOTAMSGParseMult   recv result: %d, retry_count: %d\r\n",result,retry_count);
             if (retry_count < 5) {
                 return 1;
             }
@@ -555,7 +555,7 @@ static int  SendOTACommand(OTAObject *pOTA, unsigned char *buf, unsigned int len
             times++;
             if(times >= xcpstatus->XCPCMDOuttimeTimes)
             {
-                LOG("Overtime %d times_6 ,Can ID 0x%x device_drv XcpSendProgramMaxCMD response failed!", xcpstatus->XCPCMDOuttimeTimes, pOTA->deviceID);
+                LOG("[OTA] Overtime %d times_6 ,Can ID 0x%x device_drv XcpSendProgramMaxCMD response failed!", xcpstatus->XCPCMDOuttimeTimes, pOTA->deviceID);
                 memset(xcpstatus, 0, sizeof(XCPStatus));
                 xcpstatus->ErrorReg |= 1 << 8;
                 xcpstatus->ErrorDeviceID = pOTA->deviceID;
@@ -647,19 +647,19 @@ static int ReadFileAndSendData(FILE *rfile, OTAObject *pOTA, XCPStatus *xcpstatu
             return 1;
         }
         unsigned int filesize = file_stat.st_size;
-        LOG("Bin ota file size %d\r\n", filesize);
+        LOG("[OTA] Bin ota file size %d\r\n", filesize);
 
         unsigned char lastpackdatanum = filesize % 7;
-        LOG("lastpackdatanum %d\r\n", lastpackdatanum);
+        LOG("[OTA] lastpackdatanum %d\r\n", lastpackdatanum);
 
         unsigned int totalpack = (filesize - lastpackdatanum) / 7;
-        LOG("totalpack %d\r\n", totalpack);
+        LOG("[OTA] totalpack %d\r\n", totalpack);
 
         unsigned int percent_count = totalpack / 80;
-        LOG("percent_count %d\r\n", percent_count);
+        LOG("[OTA] percent_count %d\r\n", percent_count);
 
         lastpackdatanum = filesize - (totalpack * 7);
-        LOG("lastpackdatanum %d\r\n", lastpackdatanum); 
+        LOG("[OTA] lastpackdatanum %d\r\n", lastpackdatanum); 
         fseek(rfile, 0, SEEK_SET);         
 
         unsigned char FileBuff[490] = {0};
@@ -682,7 +682,7 @@ static int ReadFileAndSendData(FILE *rfile, OTAObject *pOTA, XCPStatus *xcpstatu
                     rnum = fread(FileBuff, 1, bytes_to_read, rfile);
                    
                     if (rnum < 7) {
-                        LOG("file read 7 byte data failed! rnum: %zu\n", rnum);
+                        LOG("[OTA] file read 7 byte data failed! rnum: %zu\n", rnum);
                         xcpstatus->ErrorReg |= 1 << 6;
                         xcpstatus->ErrorDeviceID = pOTA->deviceID;
                        
@@ -698,7 +698,7 @@ static int ReadFileAndSendData(FILE *rfile, OTAObject *pOTA, XCPStatus *xcpstatu
 
                 if(xcpstatus->ErrorReg != 0)
                 {
-                    LOG("if(xcpstatus.ErrorReg != 0)");
+                    LOG("[OTA] if(xcpstatus.ErrorReg != 0)");
                     return;
                 }
                 ProgramProgress = (int)((float)i/totalpack*100);
@@ -984,24 +984,24 @@ void XCP_OTA(OTAObject *pOTA)
         memset(&xcpstatus, 0, sizeof(XCPStatus));
         FILE *rfile = NULL;
         //set_modbus_reg_val(OTAPPROGRESSREGADDR, 0);//0124,升级进度
-        LOG("OTAing.....................\r\n");
+        LOG("[OTA] OTAing.....................\r\n");
         OTA_RecvPacketCount = 0;//接收包计数为0
         if(xcpstatus.ErrorReg == 0)
         {
             char otafilenamestr1[OTAFILENAMEMAXLENGTH + 64] = {'\0'};
             snprintf(otafilenamestr1, sizeof(otafilenamestr1), "%s/%s", USB_MOUNT_POINT, pOTA->OTAFilename);
-            LOG("otafilenamestr1 %s\r\n", otafilenamestr1);
-            LOG("OTAStart:%d,deviceID:%d,OTAFilename:%s,OTAFileType:%d,deviceType:%d\n", pOTA->OTAStart, pOTA->deviceID, pOTA->OTAFilename, pOTA->OTAFileType, pOTA->deviceType);
+            LOG("[OTA] otafilenamestr1 %s\r\n", otafilenamestr1);
+            LOG("[OTA] OTAStart:%d,deviceID:%d,OTAFilename:%s,OTAFileType:%d,deviceType:%d\n", pOTA->OTAStart, pOTA->deviceID, pOTA->OTAFilename, pOTA->OTAFileType, pOTA->deviceType);
             rfile = fopen(otafilenamestr1, "rb");  // "rb" = 只读，二进制
             if (rfile == NULL)
             {
-                LOG("%s open error, error code %d %s\r\n",otafilenamestr1, errno, strerror(errno));
+                LOG("[OTA] %s open error, error code %d %s\r\n",otafilenamestr1, errno, strerror(errno));
                 xcpstatus.ErrorReg |= 1 << 1;
                 xcpstatus.ErrorDeviceID = pOTA->deviceID;
             }
             else
             {
-                LOG("xcpota %s open success\n", pOTA->OTAFilename);
+                LOG("[OTA] xcpota %s open success\n", pOTA->OTAFilename);
             }
         }
 
@@ -1017,11 +1017,11 @@ void XCP_OTA(OTAObject *pOTA)
 
         if(ret == 0)
         {
-            LOG("OK_First_XcpTryConnectDevice, pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
+            LOG("[OTA] OK_First_XcpTryConnectDevice, pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
         }
         else
         {
-            LOG("ERROR_First_XcpTryConnectDevice, error code %d\r\n", ret);
+            LOG("[OTA] ERROR_First_XcpTryConnectDevice, error code %d\r\n", ret);
             return;
         }
 
@@ -1037,11 +1037,11 @@ void XCP_OTA(OTAObject *pOTA)
 
         if(ret == 0)
         {
-            LOG("OK_Second_XcpTryQueryStatusOnce, pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
+            LOG("[OTA] OK_Second_XcpTryQueryStatusOnce, pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
         }
         else
         {
-            LOG("ERROR_Second_XcpTryQueryStatusOnce, error code %d\r\n", ret);
+            LOG("[OTA] ERROR_Second_XcpTryQueryStatusOnce, error code %d\r\n", ret);
             return;
         }
 
@@ -1057,11 +1057,11 @@ void XCP_OTA(OTAObject *pOTA)
         ret =  ReadFileAndSendData(rfile,pOTA,&xcpstatus);
         if(ret == 0)
         {
-            LOG("OK_Third_ReadFileAndSendData pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
+            LOG("[OTA] OK_Third_ReadFileAndSendData pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
         }
         else
         {
-            LOG("ERROR_Third_ReadFileAndSendData, error code %d\r\n", ret);
+            LOG("[OTA] ERROR_Third_ReadFileAndSendData, error code %d\r\n", ret);
             return;
         }
 
@@ -1071,11 +1071,11 @@ void XCP_OTA(OTAObject *pOTA)
 
         if(ret == 0)
         {
-            LOG("OK_Fourth_HandleXcpCommunication pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
+            LOG("[OTA] OK_Fourth_HandleXcpCommunication pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
         }
         else
         {
-            LOG("ERROR_Fourth_HandleXcpCommunication, error code %d\r\n", ret);
+            LOG("[OTA] ERROR_Fourth_HandleXcpCommunication, error code %d\r\n", ret);
                 return;
         }
 
@@ -1083,17 +1083,17 @@ void XCP_OTA(OTAObject *pOTA)
         ret =  XcpProgramResetHandler(pOTA,&xcpstatus);
         if(ret == 0)
         {
-            LOG("OK_Fifth_XcpProgramResetHandler pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
+            LOG("[OTA] OK_Fifth_XcpProgramResetHandler pOTA->deviceID = 0x %x\r\n",pOTA->deviceID);
         }
         else
         {
-            LOG("ERROR_Fifth_XcpProgramResetHandler, error code %d\r\n", ret);
+            LOG("[OTA] ERROR_Fifth_XcpProgramResetHandler, error code %d\r\n", ret);
             return;
         }
 #endif
         if(xcpstatus.ErrorReg == 0)
         {
-            LOG("can id 0x%x device ota success!\r\n", pOTA->deviceID);
+            LOG("[OTA] can id 0x%x device ota success!\r\n", pOTA->deviceID);
             xcpstatus.DeviceProgramOkFlag = 1;
             if(pOTA->deviceType == BCU)
             {
@@ -1103,7 +1103,7 @@ void XCP_OTA(OTAObject *pOTA)
         }
         else
         {
-            LOG("can id 0x%x device ota failed, error register val 0x%x!\r\n", pOTA->deviceID, xcpstatus.ErrorReg);
+            LOG("[OTA] can id 0x%x device ota failed, error register val 0x%x!\r\n", pOTA->deviceID, xcpstatus.ErrorReg);
             set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
         }
 

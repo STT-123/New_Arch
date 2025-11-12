@@ -1939,8 +1939,7 @@ void UDS_OTA(OTAObject* pOTA)
         printf("4444\r\n");
         if(udsstatus.ErrorReg == 0)
         {
-            printf("can id 0x%x device ota success!\r\n", pOTA->deviceID);
-			LOG("can id 0x%x device ota success!\r\n", pOTA->deviceID);
+			LOG("[OTA] can id 0x%x device ota success!\r\n", pOTA->deviceID);
             udsstatus.DeviceProgramOkFlag = 1;
             set_modbus_reg_val(OTAPPROGRESSREGADDR, 100);//0124,升级进度
             set_modbus_reg_val(OTASTATUSREGADDR, OTASUCCESS);
@@ -1950,8 +1949,7 @@ void UDS_OTA(OTAObject* pOTA)
         }
         else
         {
-            printf("can id 0x%x device ota failed, error register val 0x%x!\r\n", pOTA->deviceID, udsstatus.ErrorReg);
-			LOG("can id 0x%x device ota failed, error register val 0x%x!\r\n", pOTA->deviceID, udsstatus.ErrorReg);
+			LOG("[OTA] can id 0x%x device ota failed, error register val 0x%x!\r\n", pOTA->deviceID, udsstatus.ErrorReg);
             // set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
         }
 

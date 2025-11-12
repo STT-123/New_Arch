@@ -104,7 +104,7 @@ void FtpServiceThreadCreate(void)
         ret = pthread_create(&ftp_service_thread_id, NULL, ftp_service_thread_func, &ftp_port);
         if (ret != 0)
         {
-            LOG("Create ftp_service_thread_func Failed, [%s]. \n", strerror(ret));
+            LOG("[FTP] Create ftp_service_thread_func Failed, [%s]. \n", strerror(ret));
             sleep(1);
         }
     } while (ret != 0);

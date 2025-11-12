@@ -4,19 +4,19 @@
 #include "interface/BMS/C_BMSAnalysis.h"
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/xmodem_drv/xmodemdata.h"
-#define APP_PATH  "/usr/xcharge"  
+#define APP_PATH  "/opt/xcharge"  
 
 ECUStatus ecustatus;
 
 
 void ECU_OTA(OTAObject *pOTA)
 {
-	LOG("ECU_OTA start!, pOTA->OTAStart:%d\r\n", pOTA->OTAStart);
+	LOG("[OTA] ECU_OTA start!, pOTA->OTAStart:%d\r\n", pOTA->OTAStart);
     if (!pOTA->OTAStart) return;
     
     memset(&ecustatus, 0, sizeof(ECUStatus));
-    LOG("pOTA->deviceType : %d \r\n", pOTA->deviceType);
-    LOG("can id 0x%x device ota start!\r\n", pOTA->deviceID);
+    LOG("[OTA] pOTA->deviceType : %d \r\n", pOTA->deviceType);
+    LOG("[OTA] can id 0x%x device ota start!\r\n", pOTA->deviceID);
     set_modbus_reg_val(OTASTATUSREGADDR, OTASTARTRUNNING);
     
     if(pOTA->deviceID == 0 && pOTA->deviceType == ECU)
@@ -44,7 +44,7 @@ void ECU_OTA(OTAObject *pOTA)
 				return;
 			}
 			
-			LOG("ECU bin file verified: %s\n", pOTA->OTAFilename);
+			LOG("[OTA] ECU bin file verified: %s\n", pOTA->OTAFilename);
 		}
 
 		set_modbus_reg_val(OTAPPROGRESSREGADDR, 40); // 0124
@@ -57,13 +57,13 @@ void ECU_OTA(OTAObject *pOTA)
 			// 方法1: 原子替换
 			snprintf(cmd, sizeof(cmd), "cp \"%s/%s\" \"%s/.bat_ecu.tmp\" && mv \"%s/.bat_ecu.tmp\" \"%s/bat_ecu\"", 
 					USB_MOUNT_POINT, pOTA->OTAFilename, APP_PATH, APP_PATH, APP_PATH);	
-			LOG("Copy command: %s\n", cmd);
+			LOG("[OTA] Copy command: %s\n", cmd);
 			
 			int ret = system(cmd);
 			if (ret == 0) {
-				LOG("Program update successful.\n");
+				LOG("[OTA] Program update successful.\n");
 			} else {
-				LOG("Program update failed.\n");
+				LOG("[OTA] Program update failed.\n");
 				ecustatus.ErrorReg |= 1 << 2;
 			}
 		}
@@ -76,15 +76,15 @@ void ECU_OTA(OTAObject *pOTA)
             // 将.bin文件复制为目标可执行文件（去掉.bin后缀）
             snprintf(cmd, sizeof(cmd), "cp \"%s/%s\" \"%s/bat_ecu\"", 
                      USB_MOUNT_POINT, pOTA->OTAFilename, APP_PATH);
-            LOG("Copy command: %s\n", cmd);
+            LOG("[OTA] Copy command: %s\n", cmd);
             
             int ret = system(cmd);
             if (ret == 0) {
-                LOG("Program copy successful.\n");
+                LOG("[OTA] Program copy successful.\n");
             } 
             else 
             {
-                LOG("Program copy failed.\n");
+                LOG("[OTA] Program copy failed.\n");
                 ecustatus.ErrorReg |= 1 << 2;
             }
         }
@@ -94,11 +94,11 @@ void ECU_OTA(OTAObject *pOTA)
 		if(ecustatus.ErrorReg == 0)
 		{
 			// 使用C语言方式验证，而不是system("file ...")
-			if (!verify_bin_file("/usr/xcharge/bat_ecu")) {
-				LOG("Copied file verification failed\n");
+			if (!verify_bin_file("/opt/xcharge/bat_ecu")) {
+				LOG("[OTA] Copied file verification failed\n");
 				ecustatus.ErrorReg |= 1 << 4;
 			} else {
-				LOG("Copied file verification successful\n");
+				LOG("[OTA] Copied file verification successful\n");
 			}
 		}
 
@@ -109,13 +109,13 @@ void ECU_OTA(OTAObject *pOTA)
             snprintf(cmd, sizeof(cmd), "chmod 755 \"%s/bat_ecu\"", APP_PATH);
             int ret = system(cmd);
             if (ret == 0) {
-                LOG("Permission settings successful.\n");
+                LOG("[OTA] Permission settings successful.\n");
 				set_modbus_reg_val(OTAPPROGRESSREGADDR, 0); // 0124
                 // 完成OTA清理工作
                 FinshhECUOtaAndCleanup(pOTA);
                 
                 // 确保数据写入磁盘并重启
-                LOG("Syncing filesystem and rebooting...\n");
+                LOG("[OTA] Syncing filesystem and rebooting...\n");
                 system("sync");
 
                 sleep(5);//5s后重启
@@ -123,7 +123,7 @@ void ECU_OTA(OTAObject *pOTA)
             } 
             else 
             {
-                LOG("Permission g_ipsetting failed.\n");
+                LOG("[OTA] Permission g_ipsetting failed.\n");
                 ecustatus.ErrorReg |= 1 << 3;
             }
         }
@@ -133,12 +133,12 @@ void ECU_OTA(OTAObject *pOTA)
         {
             printf("can id 0x%x device ota failed, error register val 0x%x!\r\n", 
                    pOTA->deviceID, ecustatus.ErrorReg);
-            LOG("can id 0x%x device ota failed, error register val 0x%x!\r\n", 
+            LOG("[OTA] can id 0x%x device ota failed, error register val 0x%x!\r\n", 
                 pOTA->deviceID, ecustatus.ErrorReg);
             set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
             
             // 恢复备份（可选）
-            if(access("/usr/xcharge/bat_ecu.backup", F_OK) == 0) {
+            if(access("/opt/xcharge/bat_ecu.backup", F_OK) == 0) {
                 printf("Attempting to restore backup...\n");
                 snprintf(cmd, sizeof(cmd), "cp \"%s/bat_ecu.backup\" \"%s/bat_ecu\"", APP_PATH, APP_PATH);
                 system(cmd);
@@ -148,7 +148,7 @@ void ECU_OTA(OTAObject *pOTA)
         pOTA->OTAStart = 0;
     }
 	else{
-		LOG("pOTA->deviceID = 0x%x, pOTA->deviceType = %d\r\n",pOTA->deviceID, pOTA->deviceType);
+		LOG("[OTA] pOTA->deviceID = 0x%x, pOTA->deviceType = %d\r\n",pOTA->deviceID, pOTA->deviceType);
 		ecustatus.ErrorReg = 1;
 		ecustatus.ErrorDeviceID = pOTA->deviceID;
 	}

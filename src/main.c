@@ -26,7 +26,6 @@ OTAObject otactrl;
 
 
 void update_bat_data(sqlite3 *db);
-extern uint8_T TCU_FcnStopSet;                /* '<Root>/TCU_FcnStopSet' */
 struct tm utc_timeinfo;
 
 int main(int argc, char **argv)

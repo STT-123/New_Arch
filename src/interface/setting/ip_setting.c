@@ -15,7 +15,7 @@ void static save_setting_to_file(const char *filepath, Setting_t *ipsetting)
     }
     else
     {
-        LOG("Failed to write ipsetting\r\n");
+        LOG("[Setting] Failed to write ipsetting\r\n");
     }
 }
 
@@ -42,7 +42,7 @@ void G_settings_init()
     {
         struct in_addr addr;
         addr.s_addr = htonl(g_ipsetting.ip);
-        LOG("Read IP from config: %s\n", inet_ntoa(addr));
+        LOG("[Setting] Read IP from config: %s\n", inet_ntoa(addr));
     }
     else
     {
@@ -54,7 +54,7 @@ void G_settings_init()
 
         struct in_addr addr;
         addr.s_addr = htonl(g_ipsetting.ip);
-        LOG("Default IP used and saved: %s\n", inet_ntoa(addr));
+        LOG("[Setting] Default IP used and saved: %s\n", inet_ntoa(addr));
     }
 }
 
