@@ -2,6 +2,7 @@
 #include "sd_deal.h"
 #include "interface/G_GloabalVariable.h"
 #include "device_drv/modbustcp_drv/modbustcp_drv.h"
+#include "device_drv/abncheck_drv/abncheck_drv.h"
 #include "interface/log/log.h"
 #include "interface/BMS/bms/CANRcvFcn.h"
 #include <time.h>
@@ -118,15 +119,15 @@ static int GetNowTime(struct tm *nowTime)
     static time_t last_update_time = 0;
     time_t current_time = time(NULL);
     // 检查时间
-    if (BCU_TimeYear != 0) // bcu发来时间了
+    if (get_BCU_TimeYearValue() != 0) // bcu发来时间了
     {
         // 填充外部时间变量到 tm 结构体
-        timeinfo.tm_year = BCU_TimeYear + 100;
-        timeinfo.tm_mon = BCU_TimeMonth - 1;
-        timeinfo.tm_mday = BCU_TimeDay;
-        timeinfo.tm_hour = BCU_TimeHour;
-        timeinfo.tm_min = BCU_TimeMinute;
-        timeinfo.tm_sec = BCU_TimeSencond;
+        timeinfo.tm_year = get_BCU_TimeYearValue() + 100;
+        timeinfo.tm_mon = get_BCU_TimeMonthValue() - 1;
+        timeinfo.tm_mday = get_BCU_TimeDayValue();
+        timeinfo.tm_hour = get_BCU_TimeHourValue();
+        timeinfo.tm_min = get_BCU_TimeMinuteValue();
+        timeinfo.tm_sec = get_BCU_TimeSencondValue();
         timeinfo.tm_isdst = -1;
         if (mktime(&timeinfo) == (time_t)-1) {
             LOG("WARNING: mktime failed for BCU time\n");
@@ -490,28 +491,28 @@ static int judgeTimetoUpdate(void)
     static int last_day = 0;
     
     LOG("Current time: %d-%d-%d, Last time: %d-%d-%d\n", 
-        BCU_TimeYear, BCU_TimeMonth, BCU_TimeDay,
+        get_BCU_TimeYearValue(), get_BCU_TimeMonthValue(), get_BCU_TimeDayValue(),
         last_year, last_month, last_day);
 
     // 检查时间数据是否有效
-    if (BCU_TimeYear == 0 || BCU_TimeMonth == 0 || BCU_TimeDay == 0) {
+    if (get_BCU_TimeYearValue() == 0 || get_BCU_TimeMonthValue() == 0 || get_BCU_TimeDayValue() == 0) {
         LOG("Time invalid, skip check\n");
         return 0;
     }
 
     // 变化检查
-    if ((BCU_TimeYear != last_year) || 
-        (BCU_TimeMonth != last_month) || 
-        (BCU_TimeDay != last_day)) 
+    if ((get_BCU_TimeYearValue() != last_year) || 
+        (get_BCU_TimeMonthValue() != last_month) || 
+        (get_BCU_TimeDayValue() != last_day)) 
     {
         
         LOG("TIME CHANGE DETECTED: %d-%d-%d -> %d-%d-%d\n", 
             last_year, last_month, last_day,
-            BCU_TimeYear, BCU_TimeMonth, BCU_TimeDay);
+            get_BCU_TimeYearValue(), get_BCU_TimeMonthValue(), get_BCU_TimeDayValue());
 
-        last_year = BCU_TimeYear;
-        last_month = BCU_TimeMonth;
-        last_day = BCU_TimeDay;
+        last_year = get_BCU_TimeYearValue();
+        last_month = get_BCU_TimeMonthValue();
+        last_day = get_BCU_TimeDayValue();
         ret = 1;
     }
     
@@ -769,7 +770,7 @@ void Drv_write_buffer_to_file(DoubleRingBuffer *drb)
     
     if (mount_sdcard_fat32() != 0)// 先检查存储器状态 不存在 标记错误 直接退出
     {
-        printf("SD_FAULT\r\n");
+        LOG("SD_FAULT\r\n");
         set_emcu_fault(SD_FAULT, SET_ERROR);
         goto QUIT_FLAG;
     }

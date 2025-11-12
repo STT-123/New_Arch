@@ -38,7 +38,6 @@ int main(int argc, char **argv)
     // enqueue_message(build_boot_notification());// OCPP初始化
 
 
-
     /*=================硬件接口初始化部分================*/
     printf_version();//初始打印
     log_init();// 日志初始化
@@ -310,22 +309,6 @@ void update_bat_data(sqlite3 *db)
         data.uiBmuErrorNum[14] = 65535;
         data.uiBmuExErrorNum[14] = 65535;
     }
-    // printf(" data.uiBmuErrorNum[0]:%d\r\n", data.uiBmuErrorNum[0]);
-    // printf(" data.uiBmuErrorNum[1]:%d\r\n", data.uiBmuErrorNum[1]);
-    // printf(" data.uiBmuErrorNum[2]:%d\r\n", data.uiBmuErrorNum[2]);
-    // printf(" data.uiBmuErrorNum[3]:%d\r\n", data.uiBmuErrorNum[3]);
-    // printf(" data.uiBmuErrorNum[4]:%d\r\n", data.uiBmuErrorNum[4]);
-    // printf(" data.uiBmuErrorNum[5]:%d\r\n", data.uiBmuErrorNum[5]);
-    // printf(" data.uiBmuErrorNum[6]:%d\r\n", data.uiBmuErrorNum[6]);
-    // printf(" data.uiBmuErrorNum[7]:%d\r\n", data.uiBmuErrorNum[7]);
-    // printf(" data.uiBmuErrorNum[8]:%d\r\n", data.uiBmuErrorNum[8]);
-    // printf(" data.uiBmuErrorNum[9]:%d\r\n", data.uiBmuErrorNum[9]);
-    // printf(" data.uiBmuErrorNum[10]:%d\r\n", data.uiBmuErrorNum[10]);
-    // printf(" data.uiBmuErrorNum[11]:%d\r\n", data.uiBmuErrorNum[11]);
-    // printf(" data.uiBmuErrorNum[12]:%d\r\n", data.uiBmuErrorNum[12]);
-    // printf(" data.uiBmuErrorNum[13]:%d\r\n", data.uiBmuErrorNum[13]);
-    // printf(" data.uiBmuErrorNum[14]:%d\r\n", data.uiBmuErrorNum[14]);
-    // printf(" data.uiBmuErrorNum[15]:%d\r\n", data.uiBmuErrorNum[15]);
 
     data.iDcPower = CANRcvFcn_B.CANFDUnpack3_o7;
     // data.iDcPower = 100;
@@ -340,29 +323,7 @@ void update_bat_data(sqlite3 *db)
     data.usAirPumpState = CANRcvFcn_B.CANFDUnpack3_o24;
     // printf("usAirPumpState = %d\n",data.usAirPumpState);
     data.usAirCompressorSta = CANRcvFcn_B.CANFDUnpack3_o21;
-    // printf("usAirCompressorSta = %d\n",data.usAirCompressorSta);
 
-    // int faultCode = CANRcvFcn_B.CANFDUnpack3_o33;
-    // data.uiAirErrorLv1 = 0;
-    // data.uiAirErrorLv2 = 0;
-    // data.uiAirErrorLv3 = 0;
-    // if (faultCode == 1 || faultCode == 3 || faultCode == 28) {
-    //     data.uiAirErrorLv1 = faultCode;
-    //     printf("Air Error Lv1: %d\n", faultCode);
-    // } else if ((faultCode >= 4 && faultCode <= 5) ||
-    //         (faultCode >= 8 && faultCode <= 17) ||
-    //         (faultCode >= 20 && faultCode <= 22) ||
-    //         faultCode == 25 ||
-    //         faultCode == 29 ||
-    //         faultCode == 30 ||
-    //         faultCode == 31) {
-    //     data.uiAirErrorLv2 = faultCode;
-    //     printf("Air Error Lv2: %d\n", faultCode);
-    // } else if (faultCode == 18 || faultCode == 19 || faultCode == 23 ||
-    //         faultCode == 24 || faultCode == 26 || faultCode == 27) {
-    //     data.uiAirErrorLv3 = faultCode;
-    //     printf("Air Error Lv3: %d\n", faultCode);
-    // }
     int faultCode = CANRcvFcn_B.CANFDUnpack3_o33;
     data.uiAirErrorLv1 = 0;
     data.uiAirErrorLv2 = 0;
@@ -456,12 +417,12 @@ void update_bat_data(sqlite3 *db)
     data.usBatMaxVoltCellTemp = CANRcvFcn_B.CANFDUnpack2_o3;
     data.usBatMinVoltCellTemp = CANRcvFcn_B.CANFDUnpack2_o4;
 
-    utc_timeinfo.tm_year = BCU_TimeYear + 100; // BCU年是如24，tm_year从1900起
-    utc_timeinfo.tm_mon = BCU_TimeMonth - 1;   // BCU月是1~12，tm_mon是0~11
-    utc_timeinfo.tm_mday = BCU_TimeDay;
-    utc_timeinfo.tm_hour = BCU_TimeHour - 8;
-    utc_timeinfo.tm_min = BCU_TimeMinute;
-    utc_timeinfo.tm_sec = BCU_TimeSencond;
+    utc_timeinfo.tm_year = get_BCU_TimeYearValue() + 100; // BCU年是如24，tm_year从1900起
+    utc_timeinfo.tm_mon = get_BCU_TimeMonthValue() - 1;   // BCU月是1~12，tm_mon是0~11
+    utc_timeinfo.tm_mday = get_BCU_TimeDayValue();
+    utc_timeinfo.tm_hour = get_BCU_TimeHourValue() - 8;
+    utc_timeinfo.tm_min = get_BCU_TimeMinuteValue();
+    utc_timeinfo.tm_sec = get_BCU_TimeSencondValue();
     utc_timeinfo.tm_isdst = -1;
 
     // utc_timeinfo.tm_hour -= 8;

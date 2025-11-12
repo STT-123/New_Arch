@@ -40,8 +40,6 @@ void Set_BCU_PositiveEnergy(float energy_wh);
 
 void Set_BCU_NegativeEnergy(float energy_wh);
 
-void get_BCU_FaultInfo(uint32_T faultValue_4H,uint32_T faultValue_3H,uint32_T faultValue_2H);
-
 void set_OTA_XCPConnect(real_T value);
 real_T get_OTA_XCPConnect(void);
 
@@ -92,6 +90,25 @@ real_T get_TCU_TimeWeek(void);
 
 void set_TCU_TimeYear(real_T value);
 real_T get_TCU_TimeYear(void);
+
+real_T get_BCU_TimeYearValue(void) ;
+real_T get_BCU_TimeMonthValue(void) ;
+real_T get_BCU_TimeDayValue(void) ;
+real_T get_BCU_TimeHourValue(void) ;
+real_T get_BCU_TimeMinuteValue(void) ;
+real_T get_BCU_TimeSencondValue(void) ;
+
+real_T get_BCU_FaultInfoLv1HValue(void) ;
+real_T get_BCU_FaultInfoLv2HValue(void) ;
+real_T get_BCU_FaultInfoLv3HValue(void) ;
+real_T get_BCU_FaultInfoLv4HValue(void) ;
+real_T get_BCU_FaultInfoLv1LValue(void) ;
+real_T get_BCU_FaultInfoLv2LValue(void) ;
+real_T get_BCU_FaultInfoLv3LValue(void) ;
+real_T get_BCU_FaultInfoLv4LValue(void) ;
+real_T get_BCU_SOCValue(void) ;
+real_T get_BCU_SystemStatusValue(void) ;
+real_T get_BCU_SystemWorkModeValue(void) ;
 
 void ConvertCANFDToBus(const struct canfd_frame *frame, CAN_FD_MESSAGE_BUS *msg);
 void ConvertBusToCANFD(const CAN_FD_MESSAGE_BUS *msg, struct canfd_frame *frame);

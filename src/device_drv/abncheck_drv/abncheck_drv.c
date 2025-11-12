@@ -23,12 +23,29 @@ int PHY_ERROR = 0;
 uint8_t ECUState = 0;
 int RECOVER = 0;
 int ERROR = 0;
+
 struct timespec lasttimes;
-
 time_t g_last_bmu_rx_time = 0;
-
+ecu_fault_t ecu_fault;
+ecu_fault_t ecu_fault_last;
 static int g_can2_ready = 0;
 static int g_can3_ready = 0;
+/*--------------*/
+static const fault_mapping_t fault_map_4H[] = {
+    {23, EMERGENCY_STOP},//BCU急停
+};
+
+static const fault_mapping_t fault_map_3H[] = {
+    {8, PCS_STOP},//外部急停(充电打桩)
+    {9, ISO_SWITCH_FAULT},//隔开开关故障
+    {10,DOOR_OPEN},//门禁故障
+};
+
+static const fault_mapping_t fault_map_2H[] = {
+    {6, INSIDE_NTC_FAULT},//内部温度故障
+    {7, OUTSIDE_COM_FAULT},//外部温度故障
+};
+
 
 void log_eror_csv(void)
 {
@@ -64,51 +81,51 @@ void log_eror_csv(void)
 		log_flag = 1;
 		ecu_fault_last.emcu_fault_state = ecu_fault.emcu_fault_state;
 	}
-	if (BCU_SystemWorkMode_LAST != BCU_SystemWorkMode)
+	if (BCU_SystemWorkMode_LAST != get_BCU_SystemWorkModeValue())
 	{
 		log_flag = 1;
-		BCU_SystemWorkMode_LAST = BCU_SystemWorkMode;
+		BCU_SystemWorkMode_LAST = get_BCU_SystemWorkModeValue();
 	}
 
-	if (BCU_FaultInfoLv1H_LAST != BCU_FaultInfoLv1H)
+	if (BCU_FaultInfoLv1H_LAST != get_BCU_FaultInfoLv1HValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv1H_LAST = BCU_FaultInfoLv1H;
+		BCU_FaultInfoLv1H_LAST = get_BCU_FaultInfoLv1HValue();
 	}
-	if (BCU_FaultInfoLv1L_LAST != BCU_FaultInfoLv1L)
+	if (BCU_FaultInfoLv1L_LAST != get_BCU_FaultInfoLv1LValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv1L_LAST = BCU_FaultInfoLv1L;
+		BCU_FaultInfoLv1L_LAST = get_BCU_FaultInfoLv1LValue();
 	}
-	if (BCU_FaultInfoLv2H_LAST != BCU_FaultInfoLv2H)
+	if (BCU_FaultInfoLv2H_LAST != get_BCU_FaultInfoLv2HValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv2H_LAST = BCU_FaultInfoLv2H;
+		BCU_FaultInfoLv2H_LAST = get_BCU_FaultInfoLv2HValue();
 	}
-	if (BCU_FaultInfoLv2L_LAST != BCU_FaultInfoLv2L)
+	if (BCU_FaultInfoLv2L_LAST != get_BCU_FaultInfoLv2LValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv2L_LAST = BCU_FaultInfoLv2L;
+		BCU_FaultInfoLv2L_LAST = get_BCU_FaultInfoLv2LValue();
 	}
-	if (BCU_FaultInfoLv3H_LAST != BCU_FaultInfoLv3H)
+	if (BCU_FaultInfoLv3H_LAST != get_BCU_FaultInfoLv3HValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv3H_LAST = BCU_FaultInfoLv3H;
+		BCU_FaultInfoLv3H_LAST = get_BCU_FaultInfoLv3HValue();
 	}
-	if (BCU_FaultInfoLv3L_LAST != BCU_FaultInfoLv3L)
+	if (BCU_FaultInfoLv3L_LAST != get_BCU_FaultInfoLv3LValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv3L_LAST = BCU_FaultInfoLv3L;
+		BCU_FaultInfoLv3L_LAST = get_BCU_FaultInfoLv3LValue();
 	}
-	if (BCU_FaultInfoLv4H_LAST != BCU_FaultInfoLv4H)
+	if (BCU_FaultInfoLv4H_LAST != get_BCU_FaultInfoLv4HValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv4H_LAST = BCU_FaultInfoLv4H;
+		BCU_FaultInfoLv4H_LAST = get_BCU_FaultInfoLv4HValue();
 	}
-	if (BCU_FaultInfoLv4L_LAST != BCU_FaultInfoLv4L)
+	if (BCU_FaultInfoLv4L_LAST != get_BCU_FaultInfoLv4LValue())
 	{
 		log_flag = 1;
-		BCU_FaultInfoLv4L_LAST = BCU_FaultInfoLv4L;
+		BCU_FaultInfoLv4L_LAST = get_BCU_FaultInfoLv4LValue();
 	}
 
 	if (log_flag == 1)
@@ -117,27 +134,20 @@ void log_eror_csv(void)
 			ecu_fault.emcu_fault0,
 			ecu_fault.emcu_fault1,
 			ecu_fault.emcu_fault2,
-			BCU_FaultInfoLv1H,
-			BCU_FaultInfoLv1L,
-			BCU_FaultInfoLv2H,
-			BCU_FaultInfoLv2L,
-			BCU_FaultInfoLv3H,
-			BCU_FaultInfoLv3L,
-			BCU_FaultInfoLv4H,
-			BCU_FaultInfoLv4L,
-			BCU_SOC,
-			BCU_SystemStatus,
-			BCU_SystemWorkMode);
+			get_BCU_FaultInfoLv1HValue(),
+			get_BCU_FaultInfoLv1LValue(),
+			get_BCU_FaultInfoLv2HValue(),
+			get_BCU_FaultInfoLv2LValue(),
+			get_BCU_FaultInfoLv3HValue(),
+			get_BCU_FaultInfoLv3LValue(),
+			get_BCU_FaultInfoLv4HValue(),
+			get_BCU_FaultInfoLv4LValue(),
+			get_BCU_SOCValue(),
+			get_BCU_SystemStatusValue(),
+			get_BCU_SystemWorkModeValue());
 	}
 }
 
-typedef struct
-{
-	unsigned long long rx_bytes;
-	unsigned long long tx_bytes;
-	unsigned long long rx_packets;
-	unsigned long long tx_packets;
-} net_stats_t;
 
 int CheckSinglePHYStatus(const char *ifname)
 {
@@ -260,9 +270,101 @@ void PHYlinktate()
 	}
 }
 
+
+void update_fault_tomodus(void)
+{
+	int temp = 0;
+	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT0, ecu_fault.emcu_fault0);
+	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT1, ecu_fault.emcu_fault1);
+	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT2, ecu_fault.emcu_fault2);
+	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT3, ecu_fault.emcu_fault3);
+
+
+	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT0, &temp);
+	// printf("MDBUS_ADDR_BECU_FAULT0 = 0x%x\r\n",temp);
+	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT1, &temp);
+	// printf("MDBUS_ADDR_BECU_FAULT1 = 0x%x\r\n",temp);
+	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT2, &temp);
+	// printf("MDBUS_ADDR_BECU_FAULT2 = 0x%x\r\n",temp);
+	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT3, &temp);
+	// printf("MDBUS_ADDR_BECU_FAULT3 = 0x%x\r\n",temp);
+
+}
+
 void ECUfault_process()
 {
 	update_fault_tomodus();
+}
+
+
+/********************************************************************************
+ *
+ * 输入参数：
+ *                      unsigned int parameter   参数 //詳見fault_intaface.h
+ *                      unsigned char status        分机的状态 1 0
+ * 			无
+ * 输出参数：无
+ ********************************************************************************/
+void set_emcu_fault(unsigned char parameter, unsigned char status)
+{
+
+	unsigned char byte_num = (parameter & 0xf0) >> 4; // 高4位字节号
+	unsigned short bit_num = (parameter & 0x0F);	  //  低4位bit位
+
+	switch (byte_num)
+	{
+	case 0:
+		if (status)
+		{
+			ecu_fault.emcu_fault0 &= ~(1 << bit_num);
+		}
+		else
+		{
+			ecu_fault.emcu_fault0 |= (1 << bit_num);
+		}
+		break;
+	case 1:
+		if (status)
+		{
+			ecu_fault.emcu_fault1 &= ~(1 << bit_num);
+		}
+		else
+		{
+			ecu_fault.emcu_fault1 |= (1 << bit_num);
+		}
+		break;
+	case 2:
+		if (status)
+		{
+			ecu_fault.emcu_fault2 &= ~(1 << bit_num);
+		}
+		else
+		{
+			ecu_fault.emcu_fault2 |= (1 << bit_num);
+			
+		}
+		break;
+	case 3:
+		if (status)
+		{
+			ecu_fault.emcu_fault3 &= ~(1 << bit_num);
+		}
+		else
+		{
+			ecu_fault.emcu_fault3 |= (1 << bit_num);
+		}
+		break;
+	default:
+		break;
+	}
+	if (ecu_fault.emcu_fault0 + ecu_fault.emcu_fault1 + ecu_fault.emcu_fault2)
+	{
+		ecu_fault.emcu_fault_state = 1;
+	}
+	else
+	{
+		ecu_fault.emcu_fault_state = 0;
+	}
 }
 
 /**
@@ -346,4 +448,49 @@ int is_can2_ready(void) {
 }
 int is_can3_ready(void) {
     return g_can3_ready;
+}
+
+
+void get_BCU_FaultInfo(uint32_T faultValue_4H, uint32_T faultValue_3H,uint32_T faultValue_2H)
+{
+    unsigned int i = 0;
+    //故障映射，新增故障只需要更改fault_map_4H
+    // printf("faultValue_3H = %x\n", faultValue_3H);
+    // printf("faultValue_2H = %x\n", faultValue_2H);
+    for ( i = 0; i < sizeof(fault_map_4H)/sizeof(fault_map_4H[0]); i++) 
+    {
+        if (faultValue_4H & (1UL << fault_map_4H[i].bit_position))
+        {
+            set_emcu_fault(fault_map_4H[i].fault_type, SET_ERROR);
+        } 
+        else 
+        {
+            set_emcu_fault(fault_map_4H[i].fault_type, SET_RECOVER);
+        }
+    }
+    //故障映射，新增故障只需要更改fault_map_3H
+    for ( i = 0; i < sizeof(fault_map_3H)/sizeof(fault_map_3H[0]); i++) 
+    {
+        if (faultValue_3H & (1UL << fault_map_3H[i].bit_position))
+        {
+            set_emcu_fault(fault_map_3H[i].fault_type, SET_ERROR);
+        } 
+        else 
+        {
+            set_emcu_fault(fault_map_3H[i].fault_type, SET_RECOVER);
+        }
+    }
+    
+    //故障映射，新增故障只需要更改fault_map_2H
+    for ( i = 0; i < sizeof(fault_map_2H)/sizeof(fault_map_2H[0]); i++) 
+    {
+        if (faultValue_2H & (1UL << fault_map_2H[i].bit_position))
+        {
+            set_emcu_fault(fault_map_2H[i].fault_type, SET_ERROR);
+        } 
+        else 
+        {
+            set_emcu_fault(fault_map_2H[i].fault_type, SET_RECOVER);
+        }
+    }
 }

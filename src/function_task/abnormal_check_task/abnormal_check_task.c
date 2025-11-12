@@ -17,7 +17,7 @@ void *AbnormalDetection(void *arg)
         /* code */
         check_bcu_rx_timeout();//CAN0 通道检测
         //PHYlinktate(); //网口物理连接检测 
-        get_BCU_FaultInfo(BCU_FaultInfoLv4H,BCU_FaultInfoLv3H,BCU_FaultInfoLv2H);
+        get_BCU_FaultInfo(get_BCU_FaultInfoLv4HValue(),get_BCU_FaultInfoLv3HValue(),get_BCU_FaultInfoLv2HValue());
 
         ECUfault_process(); // 各种故障检测
         can_monitor_fun();

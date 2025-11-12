@@ -20,11 +20,7 @@ int APP_index = 0;
 int otasock = -1;
 int otasock1 = -1;
 
-
-
 static int otafileret = -1; // 初始化为自定义值（-1 表示未初始化）
-
-
 
 extern unsigned char XmodemSendCFlag;
 extern volatile unsigned long prvmsgtimer;

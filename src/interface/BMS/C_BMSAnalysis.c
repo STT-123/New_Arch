@@ -3,27 +3,13 @@
 #include "C_BMSAnalysis.h"
 #include "interface/modbus/modbus_defines.h"
 #include "interface/BMS/bms/CANSendFcn.h"
-
+#include "interface/BMS/bms/CANRcvFcn.h"
 float Electric_Meter_BCU_V3 = 102.3;
 float Electric_Meter_BCU_Curr2;
 int32_t Electric_Meter_BCU_RealtimePower;
 float Electric_Meter_BCU_EngryAccumulateChrg;
 float Electric_Meter_BCU_EngryAccumulateDisChrg;
 
-static const fault_mapping_t fault_map_4H[] = {
-    {23, EMERGENCY_STOP},//BCU急停
-};
-
-static const fault_mapping_t fault_map_3H[] = {
-    {8, PCS_STOP},//外部急停(充电打桩)
-    {9, ISO_SWITCH_FAULT},//隔开开关故障
-    {10,DOOR_OPEN},//门禁故障
-};
-
-static const fault_mapping_t fault_map_2H[] = {
-    {6, INSIDE_NTC_FAULT},//内部温度故障
-    {7, OUTSIDE_COM_FAULT},//外部温度故障
-};
 bool BMSAnalysis(unsigned char can_flag)
 {
     bool state = false;
@@ -41,49 +27,6 @@ bool BMSAnalysis(unsigned char can_flag)
     return state;
 }
 
-void get_BCU_FaultInfo(uint32_T faultValue_4H, uint32_T faultValue_3H,uint32_T faultValue_2H)
-{
-    unsigned int i = 0;
-    //故障映射，新增故障只需要更改fault_map_4H
-    // printf("faultValue_3H = %x\n", faultValue_3H);
-    // printf("faultValue_2H = %x\n", faultValue_2H);
-    for ( i = 0; i < sizeof(fault_map_4H)/sizeof(fault_map_4H[0]); i++) 
-    {
-        if (faultValue_4H & (1UL << fault_map_4H[i].bit_position))
-        {
-            set_emcu_fault(fault_map_4H[i].fault_type, SET_ERROR);
-        } 
-        else 
-        {
-            set_emcu_fault(fault_map_4H[i].fault_type, SET_RECOVER);
-        }
-    }
-    //故障映射，新增故障只需要更改fault_map_3H
-    for ( i = 0; i < sizeof(fault_map_3H)/sizeof(fault_map_3H[0]); i++) 
-    {
-        if (faultValue_3H & (1UL << fault_map_3H[i].bit_position))
-        {
-            set_emcu_fault(fault_map_3H[i].fault_type, SET_ERROR);
-        } 
-        else 
-        {
-            set_emcu_fault(fault_map_3H[i].fault_type, SET_RECOVER);
-        }
-    }
-    
-    //故障映射，新增故障只需要更改fault_map_2H
-    for ( i = 0; i < sizeof(fault_map_2H)/sizeof(fault_map_2H[0]); i++) 
-    {
-        if (faultValue_2H & (1UL << fault_map_2H[i].bit_position))
-        {
-            set_emcu_fault(fault_map_2H[i].fault_type, SET_ERROR);
-        } 
-        else 
-        {
-            set_emcu_fault(fault_map_2H[i].fault_type, SET_RECOVER);
-        }
-    }
-}
 
 void my_modbus_set_float_badc(float f, uint16_t *dest)
 {
@@ -352,4 +295,23 @@ void set_TCU_HighVoltValue(real_T value) { TCU_HighVoltValue = value; }
 real_T get_TCU_HighVoltValue(void) { return TCU_HighVoltValue; }
 
 
+real_T get_BCU_TimeYearValue(void) { return BCU_TimeYear; }
+real_T get_BCU_TimeMonthValue(void) { return BCU_TimeMonth; }
+real_T get_BCU_TimeDayValue(void) { return BCU_TimeDay; }
+real_T get_BCU_TimeHourValue(void) { return BCU_TimeHour; }
+real_T get_BCU_TimeMinuteValue(void) { return BCU_TimeMinute; }
+real_T get_BCU_TimeSencondValue(void) { return BCU_TimeSencond; }
 
+
+
+real_T get_BCU_FaultInfoLv1HValue(void) { return BCU_FaultInfoLv1H; }
+real_T get_BCU_FaultInfoLv2HValue(void) { return BCU_FaultInfoLv2H; }
+real_T get_BCU_FaultInfoLv3HValue(void) { return BCU_FaultInfoLv3H; }
+real_T get_BCU_FaultInfoLv4HValue(void) { return BCU_FaultInfoLv4H; }
+real_T get_BCU_FaultInfoLv1LValue(void) { return BCU_FaultInfoLv1L; }
+real_T get_BCU_FaultInfoLv2LValue(void) { return BCU_FaultInfoLv2L; }
+real_T get_BCU_FaultInfoLv3LValue(void) { return BCU_FaultInfoLv3L; }
+real_T get_BCU_FaultInfoLv4LValue(void) { return BCU_FaultInfoLv4L; }
+real_T get_BCU_SOCValue(void) { return BCU_SOC; }
+real_T get_BCU_SystemStatusValue(void) { return BCU_SystemStatus; }
+real_T get_BCU_SystemWorkModeValue(void) { return BCU_SystemWorkMode; }

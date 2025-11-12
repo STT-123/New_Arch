@@ -29,7 +29,7 @@
 
 /*=======================================================================*
  * Target hardware information
- *   device_drv type: ARM Compatible->ARM Cortex-A (64-bit)
+ *   ./device_drv type: ARM Compatible->ARM Cortex-A (64-bit)
  *   Number of bits:     char:   8    short:   16    int:  32
  *                       long:  64    long long:  64
  *                       native word size:  64

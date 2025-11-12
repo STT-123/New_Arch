@@ -43,7 +43,7 @@ void *XmodemCommTask(void *arg)
         int ret = get_modbus_reg_val(OTACTRLREGADDR, &curotaCtrregval);
         ret = get_modbus_reg_val(AC_SBL_OTAFILENUMBER, &sblfilenumber);
         ret = get_modbus_reg_val(AC_APP_OTAFILENUMBER, &appfilenumber);
-        // printf("curotaCtrregval %d sblfilenumber %d appfilenumber %d\n", curotaCtrregval, sblfilenumber, appfilenumber);
+        //  printf("curotaCtrregval %d sblfilenumber %d appfilenumber %d\n", curotaCtrregval, sblfilenumber, appfilenumber);
 
         if (ret < 0)
         {
@@ -88,7 +88,7 @@ void *XmodemCommTask(void *arg)
 
                         *pLwIPTCPDataTaskHandle = NULL;
                         *pLwIPTCPListenTaskHandle = NULL;
-
+                        // LOG("TcpServerExample task malloc suceess!\n");
                         // 创建监听任务
                         int ret = pthread_create(pLwIPTCPListenTaskHandle, NULL, Lwip_Listen_TASK, NULL);
                         if (ret != 0)

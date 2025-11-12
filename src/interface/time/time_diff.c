@@ -1,5 +1,9 @@
 #include "time_diff.h"
 
+/**
+ * start_tick:传进来的时间
+ * 计算从 start_tick 开始到当前时间经过的毫秒数。
+*/
 uint32_t GetTimeDifference_ms(struct timespec start_tick)
 {
     struct timespec current_tick;

@@ -3,36 +3,47 @@ ifeq ($(USERNAME), lx)
     CC :=    /home/vmuser/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-gcc
 	CXX :=   /home/vmuser/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-g++
 	STRIP := /home/vmuser/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-strip
+	SYSROOT := /home/vmuser/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-buildroot-linux-gnu/sysroot
 else ifeq ($(USERNAME), haozi)
     CC :=    /home/haozi/work/xcharge/toolchain/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-gcc
 	CXX :=   /home/haozi/work/xcharge/toolchain/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-g++
 	STRIP := /home/haozi/work/xcharge/toolchain/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-strip
+	SYSROOT := /home/haozi/work/xcharge/toolchain/AM35D1/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-buildroot-linux-gnu/sysroot
 else ifeq ($(USERNAME), stt)
     CC :=    /home/stt/arm/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-gcc
 	CXX :=   /home/stt/arm/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-g++
 	STRIP := /home/stt/arm/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-strip
+	# 指定交叉编译 sysroot 路径
+	SYSROOT := /home/stt/arm/aarch64-nuvoton-linux-gnu_sdk-buildroot/aarch64-buildroot-linux-gnu/sysroot
 else
     CC :=    /home/tian/tools/toolchainAM35/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-gcc
 	CXX :=   /home/tian/tools/toolchainAM35/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-g++
 	STRIP := /home/tian/tools/toolchainAM35/aarch64-nuvoton-linux-gnu_sdk-buildroot/bin/aarch64-nuvoton-linux-gnu-strip
+	SYSROOT := /home/tian/tools/toolchainAM35/aarch64-nuvoton-linux-gnu_sdk-buildroot/aarch64-buildroot-linux-gnu/sysroot
 endif
 
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-# 指定交叉编译 sysroot 路径
-SYSROOT := /home/stt/arm/aarch64-nuvoton-linux-gnu_sdk-buildroot/aarch64-buildroot-linux-gnu/sysroot
-LIB_DIR := $(SYSROOT)/usr/lib
+# 使用本地库路径
+LOCAL_LIB_DIR := /opt/xcharge/lib
+# LIB_DIR := $(SYSROOT)/usr/lib
 INC_DIR := $(SYSROOT)/usr/include
 
 # 依赖的库
-LIBS = -lwebsockets -ljson-c -lsqlite3 -lpthread -lssl -lcrypto -lzstd -lm -lzlog -lcurl
+LIBS = -lwebsockets -ljson-c -lsqlite3 -lpthread -lssl -lcrypto -lzstd -lm -lzlog -lcurl -latomic
 
 # 头文件包含路径（自动加源目录 + SYSROOT include）
-INCLUDES = $(shell find $(SRC_DIR) -type d) $(INC_DIR)
+# INCLUDES = $(shell find $(SRC_DIR) -type d) $(INC_DIR)
+# CFLAGS = -Wall -O2 -MMD -MP $(addprefix -I, $(INCLUDES))
+#LDFLAGS = -L$(LIB_DIR) $(LIBS)
+
+# test
+INCLUDES = $(shell find $(SRC_DIR) -type d)
 CFLAGS = -Wall -O2 -MMD -MP $(addprefix -I, $(INCLUDES))
-LDFLAGS = -L$(LIB_DIR) $(LIBS)
+# 链接时使用本地库路径，并设置运行时库搜索路径
+LDFLAGS = -L$(LOCAL_LIB_DIR) -Wl,-rpath,/opt/xcharge/lib $(LIBS)
 
 # 源文件与目标文件
 SRCS = $(shell find $(SRC_DIR) -name '*.c' -type f)

@@ -5,100 +5,98 @@
 #include "device_drv/sd_deal/sd_deal.h"
 #include "interface/log/log.h"
 
-ecu_fault_t ecu_fault;
-ecu_fault_t ecu_fault_last;
-void update_fault_tomodus(void)
+extern unsigned short g_ota_flag;
+
+// modbus接收数据处理，只处理06的写入操作
+ void modbus_write_reg_deal(modbus_t *ctx, const uint8_t *query, int req_length)
 {
-	int temp = 0;
-	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT0, ecu_fault.emcu_fault0);
-	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT1, ecu_fault.emcu_fault1);
-	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT2, ecu_fault.emcu_fault2);
-	set_modbus_reg_val(MDBUS_ADDR_BECU_FAULT3, ecu_fault.emcu_fault3);
+    int header_length = 0;
+    unsigned short data = 0;
+    unsigned short address = 0;
+  
+    header_length = modbus_get_header_length(ctx); // 获取数据长度
 
+    if (query[header_length] == 0x06) // 功能码
+    {
+        if (req_length < 12){return; }// 长度不够直接退出
 
-	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT0, &temp);
-	// printf("MDBUS_ADDR_BECU_FAULT0 = 0x%x\r\n",temp);
-	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT1, &temp);
-	// printf("MDBUS_ADDR_BECU_FAULT1 = 0x%x\r\n",temp);
-	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT2, &temp);
-	// printf("MDBUS_ADDR_BECU_FAULT2 = 0x%x\r\n",temp);
-	// get_modbus_reg_val(MDBUS_ADDR_BECU_FAULT3, &temp);
-	// printf("MDBUS_ADDR_BECU_FAULT3 = 0x%x\r\n",temp);
+        // 获取目标地址和数据
+        address = (query[header_length + 1] << 8) | query[header_length + 2];
+        data = (query[header_length + 3] << 8) | query[header_length + 4];
 
+        // 判断地址范围
+        if ((address >= REGISTERS_START_ADDRESS) && (address < (REGISTERS_START_ADDRESS + REGISTERS_NB)))
+        {
+            // 开关机操作
+            if ((address == 0x6700) && (otactrl.UpDating == 0)) // 过滤，自己需要判断是否在升级来进行自主上下电
+            {
+                if (data == 0)
+                {
+                    if(g_ota_flag != OTASTARTRUNNING)
+                    {
+                        set_TCU_PowerUpCmd(BMS_POWER_ON);
+                        printf("1get_TCU_PowerUpCmd(BMS_POWER_ON) = %d\r\n",(int)get_TCU_PowerUpCmd());
+                    }
+                }
+                else if (data == 1)
+                {
+                    set_TCU_PowerUpCmd(BMS_POWER_OFF);
+                    printf("2get_TCU_PowerUpCmd(BMS_POWER_ON) = %d\r\n",(int)get_TCU_PowerUpCmd());
+                }
+            }
+            // RTC时间设置
+            else if (address >= 0x6705 && address <= 0x670A)
+            {
+                RTC_ModBus_Deal(address, data);
+            }
+            // 设置ip
+            else if (address == 0x6711 || address == 0x6712)
+            {
+                G_ip_set_deal(address, data);
+            }
+            // 重启
+            else if ((address == 0x6720) && (data == 1))
+            {
+                set_ems_bms_reboot();
+            }
+            else if ((address == 0x6718))//节能模式使能控制
+            {
+                if (data == 0)
+                {
+                    set_modbus_reg_val(0x3418, 0);
+                    set_TCU_ECOMode(0);
+                }
+                else if (data == 1)
+                {
+                    set_modbus_reg_val(0x3418, 1);
+                    set_TCU_ECOMode(1);
+                }
+            }
+            else if ((address == 0x6719) || (address == 0x6734) || (address == 0x6735))
+            {
+                VoltageCalibration_ModBus_Deal(address, data);
+            }
+            else if (address == 0x6714)//SOHCmd
+            {
+                BatteryCalibration_ModBus_Deal(address, data);
+            }
+            else if (address == 0x6715)//SOCMinCmd,SOCMaxCmd
+            {
+                BatteryCalibration_ModBus_Deal(address, data);
+            }
+            else if (address == 0x6719)//bit0：屏蔽故障，支持开关离网,bit1：屏蔽绝缘故障，但是计算绝缘值,bit2：屏蔽绝缘功能，不计算绝缘值
+            {
+                set_modbus_reg_val(address, data);
+                set_TCU_FcnStopSet(data);
+            }
+            else if (address == 0x6721)//SD卡格式化
+            {
+                printf("SDCardDataSaveTaskCreate\r\n");
+                set_modbus_reg_val(address, data);
+            }
+        }
+    }
 }
-
-/********************************************************************************
- *
- * 输入参数：
- *                      unsigned int parameter   参数 //詳見fault_intaface.h
- *                      unsigned char status        分机的状态 1 0
- * 			无
- * 输出参数：无
- ********************************************************************************/
-void set_emcu_fault(unsigned char parameter, unsigned char status)
-{
-
-	unsigned char byte_num = (parameter & 0xf0) >> 4; // 高4位字节号
-	unsigned short bit_num = (parameter & 0x0F);	  //  低4位bit位
-
-	switch (byte_num)
-	{
-	case 0:
-		if (status)
-		{
-			ecu_fault.emcu_fault0 &= ~(1 << bit_num);
-		}
-		else
-		{
-			ecu_fault.emcu_fault0 |= (1 << bit_num);
-		}
-		break;
-	case 1:
-		if (status)
-		{
-			ecu_fault.emcu_fault1 &= ~(1 << bit_num);
-		}
-		else
-		{
-			ecu_fault.emcu_fault1 |= (1 << bit_num);
-		}
-		break;
-	case 2:
-		if (status)
-		{
-			ecu_fault.emcu_fault2 &= ~(1 << bit_num);
-		}
-		else
-		{
-			ecu_fault.emcu_fault2 |= (1 << bit_num);
-			
-		}
-		break;
-	case 3:
-		if (status)
-		{
-			ecu_fault.emcu_fault3 &= ~(1 << bit_num);
-		}
-		else
-		{
-			ecu_fault.emcu_fault3 |= (1 << bit_num);
-		}
-		break;
-	default:
-		break;
-	}
-	if (ecu_fault.emcu_fault0 + ecu_fault.emcu_fault1 + ecu_fault.emcu_fault2)
-	{
-		ecu_fault.emcu_fault_state = 1;
-	}
-	else
-	{
-		ecu_fault.emcu_fault_state = 0;
-	}
-}
-
-
-
 
 /********************************************************************************
  * 函数名称： get_modbus_reg_val
@@ -148,7 +146,7 @@ int set_modbus_reg_val(uint16_t addr, uint16_t set_val)
 	return 0;
 }
 
-int update_system_time(const Rtc_Ip_TimedateType *timeData)
+static int update_system_time(const Rtc_Ip_TimedateType *timeData)
 {
 	if (timeData == NULL)
 	{
@@ -199,7 +197,7 @@ int update_system_time(const Rtc_Ip_TimedateType *timeData)
  * 输出参数： 0 表示写入成功，1表示写入完成，-1表示失败。
  *sqw
  ********************************************************************************/
-int RTC_ModBus_Deal(uint16_t address, uint16_t data)
+static int RTC_ModBus_Deal(uint16_t address, uint16_t data)
 {
 	static Rtc_Ip_TimedateType TmData = {0};
 
@@ -241,12 +239,6 @@ int RTC_ModBus_Deal(uint16_t address, uint16_t data)
 		set_TCU_TimeMinute(TmData.minutes);
 		set_TCU_TimeSecond(TmData.seconds);
 		set_TCU_TimeCalFlg(1);
-		// timeinfo.tm_year = (TmData.year%100) + 100;      // BCU年是如24，tm_year从1900起
-		// timeinfo.tm_mon  = TmData.month ;
-		// timeinfo.tm_hour = TmData.day;
-		// timeinfo.tm_min  = TmData.hour;
-		// timeinfo.tm_sec  = TmData.seconds;
-		// timeinfo.tm_isdst = -1;
 
 		update_system_time(&TmData);
 		LOG("RTC_ModBus_Deal\r\n");
@@ -273,7 +265,7 @@ int RTC_ModBus_Deal(uint16_t address, uint16_t data)
  * 输出参数： 0 表示写入成功，1表示写入完成，-1表示失败。
  *sqw
  ********************************************************************************/
-int BatteryCalibration_ModBus_Deal(uint16_t address, uint16_t data)
+static int BatteryCalibration_ModBus_Deal(uint16_t address, uint16_t data)
 {
 	static uint8_t SOHCmd, SOCMaxCmd, SOCMinCmd = 0;
 	CANFD_MESSAGE bms_calibration_msg;
@@ -304,7 +296,7 @@ int BatteryCalibration_ModBus_Deal(uint16_t address, uint16_t data)
 	Drv_bmu_canfd_send(&bms_calibration_msg);
 }
 
-int VoltageCalibration_ModBus_Deal(uint16_t address, uint16_t data)
+static int VoltageCalibration_ModBus_Deal(uint16_t address, uint16_t data)
 {
 	static uint8_t HighVoltType, Offgridstate = 0;
 
@@ -327,7 +319,7 @@ int VoltageCalibration_ModBus_Deal(uint16_t address, uint16_t data)
 	set_TCU_HighVoltValue((real_T)HighVoltValue);//电压校准数值
 }
 
-void set_ems_bms_reboot()
+static void set_ems_bms_reboot()
 {
 	// Drv_bmu_canfd_send(&bms_reboot_msg);
 	set_OTA_XCPConnect(170);

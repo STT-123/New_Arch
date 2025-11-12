@@ -15,4 +15,5 @@
 void G_settings_init();
 void G_ip_set_deal(uint16_t address, uint16_t data);
 void G_set_system_time_from_bcu(void);
+int set_ip_address(const char *if_name, const char *ip_addr);
 #endif

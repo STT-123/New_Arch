@@ -92,12 +92,12 @@ void G_set_system_time_from_bcu(void)
 
     memset(&tm, 0, sizeof(struct tm));
 
-    tm.tm_year = 2000 + BCU_TimeYear - 1900; // tm_year 是从1900年开始计数的
-    tm.tm_mon = BCU_TimeMonth - 1;           // tm_mon 范围是 0-11
-    tm.tm_mday = BCU_TimeDay;
-    tm.tm_hour = BCU_TimeHour;
-    tm.tm_min = BCU_TimeMinute;
-    tm.tm_sec = BCU_TimeSencond;
+    tm.tm_year = 2000 + get_BCU_TimeYearValue() - 1900; // tm_year 是从1900年开始计数的
+    tm.tm_mon = get_BCU_TimeMonthValue() - 1;           // tm_mon 范围是 0-11
+    tm.tm_mday = get_BCU_TimeDayValue();
+    tm.tm_hour = get_BCU_TimeHourValue();
+    tm.tm_min = get_BCU_TimeMinuteValue();
+    tm.tm_sec = get_BCU_TimeSencondValue();
 
     time_t t = mktime(&tm); // 转为 time_t 类型（时间戳）
     if (t == -1)
@@ -115,12 +115,55 @@ void G_set_system_time_from_bcu(void)
     }
     else
     {
-        printf("System time updated to: %04d-%02d-%02d %02d:%02d:%02d\n",
-               2000 + BCU_TimeYear,
-               BCU_TimeMonth,
-               BCU_TimeDay,
-               BCU_TimeHour,
-               BCU_TimeMinute,
-               BCU_TimeSencond);
+        // 设置成功
     }
+}
+
+int set_ip_address(const char *if_name, const char *ip_addr)
+{
+    int fd;
+    struct ifreq ifr;
+    struct sockaddr_in sin;
+
+    fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0)
+    {
+        perror("socket");
+        return -1;
+    }
+
+    memset(&ifr, 0, sizeof(ifr));
+    strncpy(ifr.ifr_name, if_name, IFNAMSIZ - 1);
+
+    memset(&sin, 0, sizeof(struct sockaddr));
+    sin.sin_family = AF_INET;
+    inet_pton(AF_INET, ip_addr, &sin.sin_addr);
+    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
+
+    if (ioctl(fd, SIOCSIFADDR, &ifr) < 0)
+    {
+        perror("SIOCSIFADDR");
+        close(fd);
+        return -1;
+    }
+
+    // 设置网口状态为 up
+    if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0)
+    {
+        perror("SIOCGIFFLAGS");
+        close(fd);
+        return -1;
+    }
+
+    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
+
+    if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0)
+    {
+        perror("SIOCSIFFLAGS");
+        close(fd);
+        return -1;
+    }
+
+    close(fd);
+    return 0;
 }

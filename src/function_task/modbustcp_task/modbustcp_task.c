@@ -6,8 +6,8 @@
 #include "interface/setting/ip_setting.h"
 #include "interface/BMS/C_BMSAnalysis.h"
 #include "device_drv/modbustcp_drv/modbustcp_drv.h"
-
 #include "main.h"
+
 
 // modbus服务器信息
 modbus_t *ctx = NULL;
@@ -18,152 +18,10 @@ extern unsigned short g_ota_flag;
 uint16_t *modbusBuff = NULL;
 pthread_t NetConfig_TASKHandle;
 
-
-// modbus连接超时标志
 static int timeout_flag = 0;
-int get_timeout_flag()
+int get_timeout_flag(void)
 {
     return timeout_flag;
-}
-
-// modbus接收数据处理，只处理06的写入操作
-static void modbus_write_reg_deal(modbus_t *ctx, const uint8_t *query, int req_length)
-{
-    int header_length = 0;
-    unsigned short data = 0;
-    unsigned short address = 0;
-  
-    header_length = modbus_get_header_length(ctx); // 获取数据长度
-
-    if (query[header_length] == 0x06) // 功能码
-    {
-        if (req_length < 12){return; }// 长度不够直接退出
-
-        // 获取目标地址和数据
-        address = (query[header_length + 1] << 8) | query[header_length + 2];
-        data = (query[header_length + 3] << 8) | query[header_length + 4];
-
-        // 判断地址范围
-        if ((address >= REGISTERS_START_ADDRESS) && (address < (REGISTERS_START_ADDRESS + REGISTERS_NB)))
-        {
-            // 开关机操作
-            if ((address == 0x6700) && (otactrl.UpDating == 0)) // 过滤，自己需要判断是否在升级来进行自主上下电
-            {
-                if (data == 0)
-                {
-                    if(g_ota_flag != OTASTARTRUNNING)
-                    {
-                        set_TCU_PowerUpCmd(BMS_POWER_ON);
-                        printf("1get_TCU_PowerUpCmd(BMS_POWER_ON) = %d\r\n",(int)get_TCU_PowerUpCmd());
-                    }
-                }
-                else if (data == 1)
-                {
-                    set_TCU_PowerUpCmd(BMS_POWER_OFF);
-                    printf("2get_TCU_PowerUpCmd(BMS_POWER_ON) = %d\r\n",(int)get_TCU_PowerUpCmd());
-                }
-            }
-            // RTC时间设置
-            else if (address >= 0x6705 && address <= 0x670A)
-            {
-                RTC_ModBus_Deal(address, data);
-            }
-            // 设置ip
-            else if (address == 0x6711 || address == 0x6712)
-            {
-                G_ip_set_deal(address, data);
-            }
-            // 重启
-            else if ((address == 0x6720) && (data == 1))
-            {
-                set_ems_bms_reboot();
-            }
-            else if ((address == 0x6718))//节能模式使能控制
-            {
-                if (data == 0)
-                {
-                    set_modbus_reg_val(0x3418, 0);
-                    set_TCU_ECOMode(0);
-                }
-                else if (data == 1)
-                {
-                    set_modbus_reg_val(0x3418, 1);
-                    set_TCU_ECOMode(1);
-                }
-            }
-            else if ((address == 0x6719) || (address == 0x6734) || (address == 0x6735))
-            {
-                VoltageCalibration_ModBus_Deal(address, data);
-            }
-            else if (address == 0x6714)//SOHCmd
-            {
-                BatteryCalibration_ModBus_Deal(address, data);
-            }
-            else if (address == 0x6715)//SOCMinCmd,SOCMaxCmd
-            {
-                BatteryCalibration_ModBus_Deal(address, data);
-            }
-            else if (address == 0x6719)//bit0：屏蔽故障，支持开关离网,bit1：屏蔽绝缘故障，但是计算绝缘值,bit2：屏蔽绝缘功能，不计算绝缘值
-            {
-                set_modbus_reg_val(address, data);
-                set_TCU_FcnStopSet(data);
-            }
-            else if (address == 0x6721)//SD卡格式化
-            {
-                printf("SDCardDataSaveTaskCreate\r\n");
-                set_modbus_reg_val(address, data);
-            }
-        }
-    }
-}
-
-static int set_ip_address(const char *if_name, const char *ip_addr)
-{
-    int fd;
-    struct ifreq ifr;
-    struct sockaddr_in sin;
-
-    fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0)
-    {
-        perror("socket");
-        return -1;
-    }
-
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, if_name, IFNAMSIZ - 1);
-
-    memset(&sin, 0, sizeof(struct sockaddr));
-    sin.sin_family = AF_INET;
-    inet_pton(AF_INET, ip_addr, &sin.sin_addr);
-    memcpy(&ifr.ifr_addr, &sin, sizeof(struct sockaddr));
-
-    if (ioctl(fd, SIOCSIFADDR, &ifr) < 0)
-    {
-        perror("SIOCSIFADDR");
-        close(fd);
-        return -1;
-    }
-
-    // 设置网口状态为 up
-    if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0)
-    {
-        perror("SIOCGIFFLAGS");
-        close(fd);
-        return -1;
-    }
-
-    ifr.ifr_flags |= IFF_UP | IFF_RUNNING;
-
-    if (ioctl(fd, SIOCSIFFLAGS, &ifr) < 0)
-    {
-        perror("SIOCSIFFLAGS");
-        close(fd);
-        return -1;
-    }
-
-    close(fd);
-    return 0;
 }
 
 void *ModbusTCPServerTask(void *arg)

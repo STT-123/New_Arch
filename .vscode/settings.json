@@ -76,7 +76,10 @@
     "string.h": "c",
     "rtwtypes.h": "c",
     "stdio.h": "c",
-    "xmodemlisten.h": "c"
+    "xmodemlisten.h": "c",
+    "errno.h": "c",
+    "stdbool.h": "c",
+    "modbus.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.cCompilerPath": "gcc",

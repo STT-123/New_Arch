@@ -174,27 +174,20 @@ signed char XcpSendProgramMaxCMD(unsigned int id, unsigned char *pbuf, unsigned 
 	memcpy(&CanMes.Data[1], pbuf, payloaddatalen);
 #endif
 
-    // for(i = 0;i<8;i++)
-    // {
-    //     printf("XcpSendProgramMaxCMD CanMes.Data[%d] = 0x%x  ",i,CanMes.Data[i]);
-    // }
-    // printf("\r\n");
+
 	if(xcpobjectid == 0)
 	{
 		return Drv_bmu_can_send(&CanMes);	
 	}
 	else
 	{
-		//return CANSendMsg(BCUXCPCANID, &CanMes);
-
 		return Drv_bcu_can_send(&CanMes);	
-
 	}
 }
 
 
 
-int XCPCANOTAMSGParseMult(OTAObject *pOTA,XCPStatus *xcpstatus)
+static int XCPCANOTAMSGParseMult(OTAObject *pOTA,XCPStatus *xcpstatus)
 {
     int xStatus;
     int err;
@@ -238,9 +231,6 @@ int XCPCANOTAMSGParseMult(OTAObject *pOTA,XCPStatus *xcpstatus)
 	}
 }
 
-
-
-
 signed char XcpSendProgramEndCMD(unsigned int id, unsigned char xcpobjectid)
 {
 
@@ -263,8 +253,6 @@ signed char XcpSendProgramEndCMD(unsigned int id, unsigned char xcpobjectid)
 	}
 }
 
-
-
 signed char XcpSendProgramResetCMD(unsigned int id, unsigned char xcpobjectid)
 {
 
@@ -286,10 +274,7 @@ signed char XcpSendProgramResetCMD(unsigned int id, unsigned char xcpobjectid)
 }
 
 
-
-
-
-int XcpTryConnectDevice(OTAObject *pOTA)
+static int XcpTryConnectDevice(OTAObject *pOTA)
 {
     if(xcpstatus.ErrorReg == 0)
     {
@@ -378,13 +363,12 @@ int XcpTryConnectDevice(OTAObject *pOTA)
 
             }
         }
-    }
-    
+    }  
 }
 
 
 
-int XcpTryQueryStatusOnce(OTAObject *pOTA)
+static int XcpTryQueryStatusOnce(OTAObject *pOTA)
 {
     if(xcpstatus.ErrorReg == 0)
     {
@@ -485,12 +469,7 @@ int XcpTryQueryStatusOnce(OTAObject *pOTA)
             }
 #endif
         }
-
     }
-    
-
-
-
 }
    
 /**
@@ -504,7 +483,7 @@ int XcpTryQueryStatusOnce(OTAObject *pOTA)
 *
 */
 
-bool ReadFileData(FILE *rfile, unsigned char *FileBuff, unsigned char *FileCount, unsigned int totalpack, unsigned int i) {
+static bool ReadFileData(FILE *rfile, unsigned char *FileBuff, unsigned char *FileCount, unsigned int totalpack, unsigned int i) {
     size_t rnum = 0;
     if (*FileCount == 0 || *FileCount >= 70) {
         int remaining_data = (totalpack - i) * 7;
@@ -520,7 +499,7 @@ bool ReadFileData(FILE *rfile, unsigned char *FileBuff, unsigned char *FileCount
     return true;
 }
 
-int  SendOTACommand(OTAObject *pOTA, unsigned char *buf, unsigned int len, XCPStatus *xcpstatus, unsigned int i, unsigned int totalpack, unsigned int percent_count) 
+static int  SendOTACommand(OTAObject *pOTA, unsigned char *buf, unsigned int len, XCPStatus *xcpstatus, unsigned int i, unsigned int totalpack, unsigned int percent_count) 
 {
     if (pOTA == NULL || xcpstatus == NULL) {
             printf("Error: Null pointer passed to XCPCANOTAMSGParseMult.\n");
@@ -590,7 +569,7 @@ int  SendOTACommand(OTAObject *pOTA, unsigned char *buf, unsigned int len, XCPSt
 
 
 
-int SendLastPacket(FILE*rfile, OTAObject *pOTA, unsigned char lastpackdatanum, XCPStatus *xcpstatus) {
+static int SendLastPacket(FILE*rfile, OTAObject *pOTA, unsigned char lastpackdatanum, XCPStatus *xcpstatus) {
     signed char res;
      int xStatus;
      int err;
@@ -651,35 +630,11 @@ int SendLastPacket(FILE*rfile, OTAObject *pOTA, unsigned char lastpackdatanum, X
 
                return -3;
             }
-
         }
-
     }
-
-
-
 }
 
-void print_timestamp_with_ms() {
-    struct timeval tv;
-    struct tm *tm_info;
-
-    // 获取当前时间
-    gettimeofday(&tv, NULL);
-    tm_info = localtime(&tv.tv_sec);
-
-    // 打印带毫秒的时间戳
-    printf("%d-%02d-%02d %02d:%02d:%02d.%03ld\n",
-           tm_info->tm_year + 1900,
-           tm_info->tm_mon + 1,    
-           tm_info->tm_mday,
-           tm_info->tm_hour,
-           tm_info->tm_min,
-           tm_info->tm_sec,
-           tv.tv_usec / 1000);      
-}
-
-int ReadFileAndSendData(FILE *rfile, OTAObject *pOTA, XCPStatus *xcpstatus) 
+static int ReadFileAndSendData(FILE *rfile, OTAObject *pOTA, XCPStatus *xcpstatus) 
 {
     if(xcpstatus->ErrorReg == 0 && pOTA->OTAFileType == 0)
     {
@@ -934,7 +889,7 @@ static int HandleXcpResponseTimeout(XCPStatus *xcpstatus, OTAObject *pOTA) {
 }
 
 
-int HandleXcpCommunication(OTAObject *pOTA, XCPStatus *xcpstatus) {
+static int HandleXcpCommunication(OTAObject *pOTA, XCPStatus *xcpstatus) {
     if(xcpstatus->ErrorReg == 0)
     {
         xcpstatus->XCPCMDOuttimeTimes = 1;
@@ -952,19 +907,7 @@ int HandleXcpCommunication(OTAObject *pOTA, XCPStatus *xcpstatus) {
             }
             else{
                 return  0;
-            }
-            // usleep(2*1000);
-            // // 等待并处理响应
-            // int responseResult = HandleXcpResponseTimeout(xcpstatus, pOTA);
-            // if (responseResult == 0) {
-            //     return 0; // 成功接收到响应
-            // }
-            // else
-            // {
-            //     return -1;
-            // }
-
-           
+            }       
         }
 
     }
@@ -1010,45 +953,6 @@ signed char XcpProgramResetHandler(OTAObject *pOTA,XCPStatus *xcpstatus)
                 return -1; // 发送失败
             }
 
-            // static CAN_MESSAGE canmsg;
-            // memset(&canmsg, 0, sizeof(CAN_MESSAGE));
-            // // struct canfd_frame frame;
-            // // memset(&frame, 0, sizeof(frame));
-            // usleep(10*1000);
-
-            // if(pOTA->deviceType == BMU)
-            // {
-            //     xStatus =  queue_pend(&Queue_BMURevData, &canmsg,&err);
-            // }
-            // else
-            // {
-            //     xStatus = queue_pend(&Queue_BCURevData, &canmsg,&err);
-            //     printf("XcpProgramResetHandler xStatus %d\r\n", xStatus);
-            // }  
-            // if (xStatus == 0)
-            // {
-            //     res = XCPCANOTAMSGParse(&canmsg, &xcpstatus);
-            //     if (res == 0)
-            //     {
-            //         if (xcpstatus->XCPCMDResponseFlag)
-            //         {
-            //             set_modbus_reg_val(OTAPPROGRESSREGADDR, 90); // 0124, 升级进度
-            //             return 0; // 成功完成
-            //         }
-            //     }
-            //     else
-            //     {
-            //         times++;
-            //         if (times >= xcpstatus->XCPCMDOuttimeTimes)
-            //         {
-            //             printf("Overtime %d times_13, Can ID 0x%x device_drv XcpSendProgramMaxCMD response failed!", xcpstatus->XCPCMDOuttimeTimes, pOTA->deviceID);
-            //             memset(xcpstatus, 0, sizeof(XCPStatus));
-            //             xcpstatus->ErrorReg |= (1 << 10);
-            //             xcpstatus->ErrorDeviceID = pOTA->deviceID;
-            //             return -2; // 超时错误
-            //         }
-            //     }
-            // }
             int result = XCPCANOTAMSGParseMult(pOTA,xcpstatus);
             if (result == 0) {
                 // printf("XCP XCPCANOTAMSGParseMult   recv result: %d\r\n",result);

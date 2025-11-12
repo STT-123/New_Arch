@@ -171,7 +171,7 @@ void FinshhECUOtaAndCleanup(OTAObject* pOTA)
 
 
 // 简单的文件验证（不依赖file命令）
-int verify_bin_file(const char *filepath)
+static int verify_bin_file(const char *filepath)
 {
     FILE *fp = fopen(filepath, "rb");
     if (!fp) {

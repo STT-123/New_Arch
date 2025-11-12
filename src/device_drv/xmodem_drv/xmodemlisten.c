@@ -1,11 +1,9 @@
-// #include "C_OTAListenMonitor.h"
+
 #include "xmodemlisten.h"
 #include "xmodemstate.h"
 #include "xmodemdata.h"
 #include "interface/log/log.h"
-// pthread_t lwipDataTaskThread;
-// pthread_mutex_t task_mutex = PTHREAD_MUTEX_INITIALIZER;
-// pthread_t* pLwIPTCPDataTaskHandle_c = &lwipDataTaskThread;
+
 
 
 void* Lwip_Listen_TASK(void* param)

@@ -88,6 +88,7 @@ void *lwip_data_TASK(void *param)
 			int length = read(otasock1, tcp_server_recvbuf, 2048);
 			curmsgtimer = OsIf_GetMilliseconds();
 			// printf("length :%d\r\n",length);
+			//目前接收到的BCU\BMU\ECU都是133长度的数据
 			if(length == 133)
 			{
 				if((tcp_server_recvbuf[0] == SOH)  && (crcGet(tcp_server_recvbuf, 131) == (tcp_server_recvbuf[131] << 8 | tcp_server_recvbuf[132])))
@@ -99,7 +100,6 @@ void *lwip_data_TASK(void *param)
 					{
 						printf("Received first pack !\r\n");
 						setXmodemServerReceiveSOH(1);
-						// XmodemServerReceiveSOH = 1;
 						if(GetOTAFILEInfo(&(tcp_server_recvbuf[3]),otafilenamestr, &filesize, &xmodempacknum) == 0)
 						{
 							LOG("File name %s filesize %d packnum %d\r\n", otafilenamestr, filesize, xmodempacknum);
@@ -131,15 +131,17 @@ void *lwip_data_TASK(void *param)
 									printf("otafilenamestr : %s\r\n",otafilenamestr);
 									if(strstr(otafilenamestr, "ECU") != NULL)									
 									{
-										printf("otafilenamestr : %s\r\n",otafilenamestr);
+										
 										otadeviceType = ECU;
 										otactrl.UpDating = 1;//1130
+										printf("otadeviceType  %d\r\n", otadeviceType);
 									}
 									else if(tcp_server_recvbuf[51]==0x42 && tcp_server_recvbuf[52]==0x43 && tcp_server_recvbuf[53]==0x55 && (strstr(otafilenamestr, "BCU") != NULL))
 									{
 
 										otadeviceType = BCU;
 										otactrl.UpDating = 1;//1130
+										printf("otadeviceType  %d\r\n", otadeviceType);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[51]);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[52]);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[53]);
@@ -149,13 +151,14 @@ void *lwip_data_TASK(void *param)
 
 										otadeviceType = BMU;
 										otactrl.UpDating = 1;//1130
+										printf("otadeviceType  %d\r\n", otadeviceType);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[51]);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[52]);
 										printf("As hexadecimal10: 0x%X\n", tcp_server_recvbuf[53]);
 									}
 									else if( sblfilenumber == 1)
 									{
-										printf("AC_OTA_FILE_DATA..... \r\n");
+										printf("sblfilenumber = %d\r\n",sblfilenumber);
 										otactrl.UpDating = 1;//1130
 
 									}
@@ -166,7 +169,7 @@ void *lwip_data_TASK(void *param)
 									}
 									else if(strstr(otafilenamestr, "DCDC") != NULL)
 									{
-										printf("ACP_OTA_FILE_DATA..... \r\n");
+										printf("DCDC UpDating ..... \r\n");
 										otactrl.UpDating = 1;//1220
 									}
 
@@ -178,9 +181,7 @@ void *lwip_data_TASK(void *param)
 										printf("Invalid upgrade file\r\n");
 										LOG("Invalid upgrade file\r\n");
 										setXmodemServerReceiveFileEnd(1);
-										// XmodemServerReceiveFileEnd = 1;
-										set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
-										// set_charger_cmd(BMS_POWER_DEFAULT);
+										set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);;
 
 									}
 								}
@@ -201,9 +202,7 @@ void *lwip_data_TASK(void *param)
 									}
 									delete_files_with_prefix("0:", "XC");
 									LOG("Failed to write upgrade file\r\n");
-									// XmodemServerReceiveFileEnd = 1;
 									setXmodemServerReceiveFileEnd(1);
-//									set_emcu_fault(SD_FAULT,SET_ERROR);
 									set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
 									set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
 								}
@@ -230,7 +229,6 @@ void *lwip_data_TASK(void *param)
 									LOG("Failed to write upgrade file\r\n");
 									// XmodemServerReceiveFileEnd = 1;
 									setXmodemServerReceiveFileEnd(1);
-//									set_emcu_fault(SD_FAULT,SET_ERROR);
 									set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
 									set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
 								}
