@@ -15,7 +15,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#include "interface/G_GloabalVariable.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
 
  #define INDOVERTIME				5000//100
 

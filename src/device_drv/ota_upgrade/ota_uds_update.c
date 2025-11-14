@@ -1,12 +1,12 @@
 #include "ota_uds_update.h"
-#include "interface/G_GloabalVariable.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/xmodem/xmodemdata.h"
 #include "device_drv/xmodem/xmodemstate.h"
 #include "interface/bms/bms_analysis.h"
 #include "interface/log/log.h"
-#include "main.h"
+#include "device_drv/sd_store/sd_store.h"
+
 flashDataType flashData;
 appDataType appData[SUP_MAX_BLOCK + 1];
 // unsigned short sblfilenumber = 0xFFFF;//SBL文件数量大小
@@ -1943,7 +1943,7 @@ void UDS_OTA(OTAObject* pOTA)
             udsstatus.DeviceProgramOkFlag = 1;
             set_modbus_reg_val(OTAPPROGRESSREGADDR, 100);//0124,升级进度
             set_modbus_reg_val(OTASTATUSREGADDR, OTASUCCESS);
-            otactrl.UpDating = 0;//1130(升级成功)
+            g_otactrl.UpDating = 0;//1130(升级成功)
             udsstatus.CANStartOTA = 0;
 
         }
@@ -1967,7 +1967,7 @@ void FinishACOtaAndCleanup(OTAObject* pOTA)
 	delete_files_with_prefix(USB_MOUNT_POINT, "AC");//  这个要删除升级文件，判断xcpstatus状态，成功或者失败删除
 	delete_files_with_prefix(USB_MOUNT_POINT, "XC");//  这个要删除升级文件，判断xcpstatus状态，成功或者失败删除
 	delete_files_with_prefix(USB_MOUNT_POINT, "md5"); // 删除升级文件
-	otactrl.UpDating = 0;//1130(升级结束)
+	g_otactrl.UpDating = 0;//1130(升级结束)
 	udsstatus.CANStartOTA = 0;
 	SBl_index = 0;
 	APP_index = 0;

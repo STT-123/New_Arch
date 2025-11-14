@@ -1,14 +1,14 @@
 #include "ocpp_app_update.h"
 #include "ocpp/updownfile.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "device_drv/ota_upgrade/ota_xcp_update.h"
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/ota_upgrade/ota_other_update.h"
 #include "device_drv/ota_upgrade/ota_uds_update.h"
 #include "device_drv/xmodem/xmodemstate.h"
 #include "device_drv/sd_store/sd_store.h"
-#include "main.h"
 #include "interface/log/log.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
 #define __DEBUG__SYSTEM
 
 
@@ -87,7 +87,7 @@ int upgarde_file_type(const char *filename,const char *filetype)
 {
     if(strstr(filetype, APP_ECU_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_ECU_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -96,20 +96,20 @@ int upgarde_file_type(const char *filename,const char *filetype)
         {
             //标志位
 			sleep(1);
-            otactrl.deviceType =ECU;
-			otactrl.deviceID = 0;
-            LOG("[Ocpp]ECU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            g_otactrl.deviceType =ECU;
+			g_otactrl.deviceID = 0;
+            LOG("[Ocpp]ECU_OTA_otadeviceType: %u\r\n",g_otactrl.deviceType);
             LOG("[Ocpp]otafilenamestr: %s\r\n",filetype);
-            memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
-            memcpy(otactrl.OTAFilename, filetype, strlen(filetype));
-            LOG("[Ocpp]otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
-            otactrl.OTAStart = 1;
+            memset(g_otactrl.OTAFilename ,0 ,sizeof(g_otactrl.OTAFilename));
+            memcpy(g_otactrl.OTAFilename, filetype, strlen(filetype));
+            LOG("[Ocpp]g_otactrl.OTAFilename : %s\r\n",g_otactrl.OTAFilename);
+            g_otactrl.OTAStart = 1;
         }
         return ret;
     }
     else if(strstr(filetype, APP_BCU_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_BCU_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -117,21 +117,21 @@ int upgarde_file_type(const char *filename,const char *filetype)
         {
             //标志位
 			sleep(1);
-            otactrl.deviceType = BCU;
-            otactrl.deviceID = BCUOTACANID;
-            memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
-            memcpy(otactrl.OTAFilename,matched_filename , strlen(matched_filename));
-            printf("otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
-            printf("BCU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            g_otactrl.deviceType = BCU;
+            g_otactrl.deviceID = BCUOTACANID;
+            memset(g_otactrl.OTAFilename ,0 ,sizeof(g_otactrl.OTAFilename));
+            memcpy(g_otactrl.OTAFilename,matched_filename , strlen(matched_filename));
+            printf("g_otactrl.OTAFilename : %s\r\n",g_otactrl.OTAFilename);
+            printf("BCU_OTA_otadeviceType: %u\r\n",g_otactrl.deviceType);
             printf("otafilenamestr: %s\r\n",filetype);
-             otactrl.OTAStart = 1;
+             g_otactrl.OTAStart = 1;
 
         }
         return ret;
     }
     else if(strstr(filetype, APP_BMU_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_BMU_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -139,15 +139,15 @@ int upgarde_file_type(const char *filename,const char *filetype)
 		{
 			//标志位
 			sleep(1);
-            otactrl.deviceType = BMU;
-            memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
-            memcpy(otactrl.OTAFilename,matched_filename , strlen(matched_filename));
+            g_otactrl.deviceType = BMU;
+            memset(g_otactrl.OTAFilename ,0 ,sizeof(g_otactrl.OTAFilename));
+            memcpy(g_otactrl.OTAFilename,matched_filename , strlen(matched_filename));
 			printf("BCU_OTA_otafilenamestr: %s\r\n",matched_filename);
-            printf("otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
-            printf("BCU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            printf("g_otactrl.OTAFilename : %s\r\n",g_otactrl.OTAFilename);
+            printf("BCU_OTA_otadeviceType: %u\r\n",g_otactrl.deviceType);
             printf("otafilenamestr: %s\r\n",filetype);
-            otactrl.deviceID = 0x1821FF10;
-			otactrl.OTAStart = 1;
+            g_otactrl.deviceID = 0x1821FF10;
+			g_otactrl.OTAStart = 1;
 			
 		}
 
@@ -156,7 +156,7 @@ int upgarde_file_type(const char *filename,const char *filetype)
     }
     else if(strstr(filetype, APP_ACP_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_ACP_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -166,22 +166,22 @@ int upgarde_file_type(const char *filename,const char *filetype)
 			//标志位
 
 			sleep(1);
-            otactrl.deviceType = ACP;
-            memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
-            memcpy(otactrl.OTAFilename,matched_filename , strlen(matched_filename));
+            g_otactrl.deviceType = ACP;
+            memset(g_otactrl.OTAFilename ,0 ,sizeof(g_otactrl.OTAFilename));
+            memcpy(g_otactrl.OTAFilename,matched_filename , strlen(matched_filename));
 			printf("BCU_OTA_otafilenamestr: %s\r\n",matched_filename);
-            printf("otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
-            printf("BCU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            printf("g_otactrl.OTAFilename : %s\r\n",g_otactrl.OTAFilename);
+            printf("BCU_OTA_otadeviceType: %u\r\n",g_otactrl.deviceType);
             printf("otafilenamestr: %s\r\n",filetype);
-            otactrl.deviceID = ACPOTACANID;
-			otactrl.OTAStart = 1;
+            g_otactrl.deviceID = ACPOTACANID;
+			g_otactrl.OTAStart = 1;
 
 		}
 		return ret;
     }
 	else if(strstr(filetype, APP_DCDC_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         int ret =get_check_upgarde_file_type(filename, APP_DCDC_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -189,21 +189,21 @@ int upgarde_file_type(const char *filename,const char *filetype)
 		{
 			//标志位
 			sleep(1);
-            otactrl.deviceType = DCDC;
-            memset(otactrl.OTAFilename ,0 ,sizeof(otactrl.OTAFilename));
-            memcpy(otactrl.OTAFilename,matched_filename , strlen(matched_filename));
+            g_otactrl.deviceType = DCDC;
+            memset(g_otactrl.OTAFilename ,0 ,sizeof(g_otactrl.OTAFilename));
+            memcpy(g_otactrl.OTAFilename,matched_filename , strlen(matched_filename));
 			printf("BCU_OTA_otafilenamestr: %s\r\n",matched_filename);
-            printf("otactrl.OTAFilename : %s\r\n",otactrl.OTAFilename);
-            printf("BCU_OTA_otadeviceType: %u\r\n",otactrl.deviceType);
+            printf("g_otactrl.OTAFilename : %s\r\n",g_otactrl.OTAFilename);
+            printf("BCU_OTA_otadeviceType: %u\r\n",g_otactrl.deviceType);
             printf("otafilenamestr: %s\r\n",filetype);
-            otactrl.deviceID = DCDCOTACANID;
-			otactrl.OTAStart = 1;
+            g_otactrl.deviceID = DCDCOTACANID;
+			g_otactrl.OTAStart = 1;
 		}
 		return ret;
     }
     else if(strstr(filetype, APP_AC_UPGRADE_FILE) != NULL) 
     {
-		otactrl.UpDating = 1;
+		g_otactrl.UpDating = 1;
 		sleep(1);
 		set_modbus_reg_val(OTASTATUSREGADDR, FILEDECRYPTIONNORMALTERMINATION);
         // int ret =get_check_upgarde_file_type(filename, APP_AC_UPGRADE_FILE,matched_filename,sizeof(matched_filename));
@@ -230,9 +230,9 @@ int upgarde_file_type(const char *filename,const char *filetype)
 				printf("APP_index ...  %d \r\n",APP_index);
 				printf("sblfilenumber...%d\r\n",sblfilenumber);
 				printf("appfilenumber...%d\r\n",appfilenumber);
-				otactrl.deviceID = ACOTACANID;
-				otactrl.deviceType = AC;
-				otactrl.OTAStart = 1;
+				g_otactrl.deviceID = ACOTACANID;
+				g_otactrl.deviceType = AC;
+				g_otactrl.OTAStart = 1;
 
 			}
 	    }
@@ -467,12 +467,12 @@ int get_check_ac_upgarde_file_type(const char *filename,
             {
                 char *token;
                 char *saveptr;
-				memset(otactrl.OTAUdsSblFilename[*sbl_index],0 ,sizeof(otactrl.OTAUdsSblFilename[*sbl_index]));
+				memset(g_otactrl.OTAUdsSblFilename[*sbl_index],0 ,sizeof(g_otactrl.OTAUdsSblFilename[*sbl_index]));
 
-				// strncpy(otactrl.OTAUdsSblFilename[*sbl_index], ota_filename, sizeof(otactrl.OTAUdsSblFilename[*sbl_index]) - 1);
+				// strncpy(g_otactrl.OTAUdsSblFilename[*sbl_index], ota_filename, sizeof(g_otactrl.OTAUdsSblFilename[*sbl_index]) - 1);
 				    
-    			snprintf(otactrl.OTAUdsSblFilename[*sbl_index], sizeof(otactrl.OTAUdsSblFilename[*sbl_index]), "%s/%s", USB_MOUNT_POINT, ota_filename);
-				// printf("AC_SBL_%d: %s\n", *sbl_index, otactrl.OTAUdsSblFilename[*sbl_index]);
+    			snprintf(g_otactrl.OTAUdsSblFilename[*sbl_index], sizeof(g_otactrl.OTAUdsSblFilename[*sbl_index]), "%s/%s", USB_MOUNT_POINT, ota_filename);
+				// printf("AC_SBL_%d: %s\n", *sbl_index, g_otactrl.OTAUdsSblFilename[*sbl_index]);
 
 
                 token = strtok_r(ota_filename, "_", &saveptr); // AC
@@ -495,9 +495,9 @@ int get_check_ac_upgarde_file_type(const char *filename,
                 strncpy(out_matched_filename, ota_filename, max_len - 1);
                 out_matched_filename[max_len - 1] = '\0';
                 app_upgrade_flag = true;
-				memset(otactrl.OTAUdsFilename[*app_index],0 ,sizeof(otactrl.OTAUdsFilename[*app_index]));
-				// strncpy(otactrl.OTAUdsFilename[*app_index], ota_filename, sizeof(otactrl.OTAUdsFilename[*app_index]) - 1);
-				snprintf(otactrl.OTAUdsFilename[*app_index], sizeof(otactrl.OTAUdsFilename[*app_index]), "%s/%s", USB_MOUNT_POINT, ota_filename);
+				memset(g_otactrl.OTAUdsFilename[*app_index],0 ,sizeof(g_otactrl.OTAUdsFilename[*app_index]));
+				// strncpy(g_otactrl.OTAUdsFilename[*app_index], ota_filename, sizeof(g_otactrl.OTAUdsFilename[*app_index]) - 1);
+				snprintf(g_otactrl.OTAUdsFilename[*app_index], sizeof(g_otactrl.OTAUdsFilename[*app_index]), "%s/%s", USB_MOUNT_POINT, ota_filename);
 				// printf("app_index:%d, ota_filename:%s\n", *app_index, ota_filename);
 
 

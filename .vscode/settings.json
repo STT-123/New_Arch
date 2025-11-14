@@ -85,7 +85,13 @@
     "stdint.h": "c",
     "dirent.h": "c",
     "netlink.h": "c",
-    "bms_analysis.h": "c"
+    "bms_analysis.h": "c",
+    "g_globalvariable.h": "c",
+    "ota_ecu_update.h": "c",
+    "ota_other_update.h": "c",
+    "ota_uds_update.h": "c",
+    "ota_fun.h": "c",
+    "ws_client.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": "",
   "C_Cpp_Runner.cCompilerPath": "gcc",

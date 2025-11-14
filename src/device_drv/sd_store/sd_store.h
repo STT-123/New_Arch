@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <limits.h>
 #include <time.h>
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 
 #define MAX_FILES_IN_FOLDER 80
 #define BUFFER_SIZE 100 // 每个环形缓冲区的容量
@@ -23,6 +23,11 @@
 
 #define  SDMAXCAPACITY 90
 #define CAN_ID_HISTORY_SIZE 6
+
+/*-----*/
+#define USB_DEVICE "/dev/mmcblk1p1"
+#define USB_MOUNT_POINT "/mnt/sda"
+#define UNMOUNT_POINT  "umount /mnt/sda"
 typedef struct
 {
     uint32_t relativeTimestamp; // 相对时间戳

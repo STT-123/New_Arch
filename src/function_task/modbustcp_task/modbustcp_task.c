@@ -2,11 +2,10 @@
 #include "modbustcp_task.h"
 #include "interface/log/log.h"
 #include "interface/modbus/modbus_defines.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/setting/ip_setting.h"
 #include "interface/bms/bms_analysis.h"
 #include "device_drv/modbustcp_pro/modbustcp_pro.h"
-#include "main.h"
 
 
 // modbus服务器信息

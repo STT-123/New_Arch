@@ -1,5 +1,4 @@
 #define _GNU_SOURCE
-#include "main.h"
 #include "function_task/bcu_task/bcu_task.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "interface/log/log.h"
@@ -8,7 +7,7 @@
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/sd_store/sd_store.h"
 #include "function_task/sd_task/sd_task.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
 
 pthread_t BCURecDel_TASKHandle;
 void *bcu_DealTask(void *arg)
@@ -24,7 +23,7 @@ void *bcu_DealTask(void *arg)
     {
 
 
-        if ((g_ota_flag == OTAIDLE || g_ota_flag == OTAFAILED || otactrl.deviceType == AC))
+        if ((g_ota_flag == OTAIDLE || g_ota_flag == OTAFAILED || g_otactrl.deviceType == AC))
         {
             if (queue_pend(&Queue_BCURevData_FD, (unsigned char *)&canrev_frame, &len) == 0)
             {

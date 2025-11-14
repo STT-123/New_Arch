@@ -1,5 +1,6 @@
 #include "ftp_protocol.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
+#include "device_drv/sd_store/sd_store.h"
 #define DATA_PORT 40900
 #define BUFFER_SIZE 2920 // 2048 网络传输包mtu限制改为1460得倍数
 #define TIMEOUT_SECONDS 300000

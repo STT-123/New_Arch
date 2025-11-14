@@ -1,14 +1,12 @@
 #include <time.h>
 #include <features.h>
-// #include "main.h"
 #include "interface/log/log.h"
-// #include "interface/modbus"
 #include "interface/bms/bms_analysis.h"
 #include "device_drv/abncheck/abncheck.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "device_drv/bmu_deal/bmu_deal.h"
 #include "device_drv/modbustcp_pro/modbustcp_pro.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/bms/bms_simulink/CANRcvFcn.h"
 
 

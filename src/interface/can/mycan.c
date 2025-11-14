@@ -3,7 +3,7 @@
 #include <errno.h>
 #include "mycan.h"
 #include "interface/log/log.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include <fcntl.h>
 #define GET_STATE 1
 #define GET_RESTART_MS 2

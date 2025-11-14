@@ -2,10 +2,9 @@
 #include "bmu_task.h"
 #include "device_drv/bmu_deal/bmu_deal.h"
 #include "interface/log/log.h"
-#include "main.h"
 #include "interface/bms/bms_simulink/CANRcvFcn.h"
 #include "function_task/sd_task/sd_task.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
 
 void *bmu_DealTask(void *arg)
 {
@@ -15,7 +14,7 @@ void *bmu_DealTask(void *arg)
     int err = 0;
     while (1)
     {
-        if ((g_ota_flag == OTAIDLE || g_ota_flag == OTAFAILED || otactrl.deviceType == AC))
+        if ((g_ota_flag == OTAIDLE || g_ota_flag == OTAFAILED || g_otactrl.deviceType == AC))
         {
 
             // 等待信号，有信号则有消息来，处理以后加进消息接收中

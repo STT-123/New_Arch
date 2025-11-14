@@ -14,8 +14,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/time.h>
-
-#include "interface/G_GloabalVariable.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
 
 #define UDSOVERTIME				1000
 

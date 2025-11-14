@@ -1,5 +1,5 @@
 #include "ip_setting.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/log/log.h"
 #include "./bms/bms_simulink/CANRcvFcn.h"
 #define CONFIG_FILE_PATH "setting.conf"

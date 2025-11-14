@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 #include "sd_store.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "device_drv/modbustcp_pro/modbustcp_pro.h"
 #include "device_drv/abncheck/abncheck.h"
 #include "interface/log/log.h"

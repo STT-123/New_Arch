@@ -16,8 +16,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-#include "main.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
  typedef struct
  {
      unsigned int XCPCMDRpeatTimes;

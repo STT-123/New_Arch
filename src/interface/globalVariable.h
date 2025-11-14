@@ -25,89 +25,10 @@
 #include <sys/uio.h>
 #include <stdatomic.h>
 
-
+#define yinhantong //  映翰通标志位
 #define SET_ERROR 0
 #define SET_RECOVER 1
 
-#define ALL_FAULT 0xFF // 获取总故障的时候使用。
-#define USB_DEVICE "/dev/mmcblk1p1"
-#define USB_MOUNT_POINT "/mnt/sda"
-
-#define UNMOUNT_POINT  "umount /mnt/sda"
-// #########################################################################################//
-
-// #########################################################################################//
-// 定义故障映射表
-
-typedef struct
-{
-	uint8_t flag;
-	uint32_t ip;
-
-} Setting_t;
-extern Setting_t g_ipsetting;
-// #########################################################################################//
-
-// #########################################################################################//
-
-#define RESULT_OK 0
-#define RESULT_FAIL -1
-
-// #########################################################################################//
-
-// #########################################################################################//
-
-
-#define XMODEMISTTRANFERINGFILE 0x0001  // XMODEM正在传输文件
-#define XMODEMNORMALTERMINATION 0x0002  // XMODEM正常终止（传输成功）
-#define XMODEMOUTTIMETERMINATION 0x0004 // XMODEM超时终止
-#define XMODEMABORTTERMINATION 0x0006   // XMODEM异常中止
-//以上4个未使用
-#define FILEISDECRYPTIIONING 0x0008		// 文件正在解密中
-#define FILEDECRYPTIONNORMALTERMINATION 0x0010  // 文件解密正常完成
-
-#define OTASTARTRUNNING 0x0080 		// OTA开始运行
-#define OTAIDLE 0x0000				// OTA空闲状态
-#define OTASUCCESS 0x0100			// OTA升级成功
-#define OTAFAILED 0x0200			// OTA升级失败
-
-// #########################################################################################//
-
-// #########################################################################################//
-
-typedef enum
-{
-	ECU = 1,
-	BCU,
-	BMU,
-	AC,
-	ACP,
-	DCDC
-} OTADEVICETYPE;
-
-// #########################################################################################//
-
-// #########################################################################################//
-#define OTAFILENAMEMAXLENGTH 128
-#define MAX_FILE_COUNT 20
-
-typedef struct
-{
-	unsigned char OTAFileType;
-	char OTAFilename[OTAFILENAMEMAXLENGTH];
-	char OTAUdsSblFilename[MAX_FILE_COUNT][OTAFILENAMEMAXLENGTH];
-	char OTAUdsFilename[MAX_FILE_COUNT][OTAFILENAMEMAXLENGTH];
-	_Atomic unsigned int deviceID;//原子操作
-	_Atomic unsigned char deviceType;
-	_Atomic unsigned char OTAStart;
-	_Atomic unsigned char multDeviceOTA;
-	_Atomic unsigned char multDeviceOTANum;
-	_Atomic unsigned char UpDating;
-} OTAObject;
-
-// #########################################################################################//
-
-// #########################################################################################//
 
 typedef struct
 {

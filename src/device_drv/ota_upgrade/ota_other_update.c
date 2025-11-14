@@ -1,11 +1,11 @@
 #define _GNU_SOURCE
 #include "ota_other_update.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "interface/modbus/modbus_defines.h"
 #include "interface/log/log.h"
 #include "device_drv/xmodem/xmodemdata.h"
-#include "main.h"
+#include "device_drv/sd_store/sd_store.h"
 #define ACPDC_BLOCK_SIZE 120
 IndependentStatus independentStatus;
 
@@ -402,7 +402,7 @@ void ACPDCDC_OTA(OTAObject* pOTA)
 			independentStatus.DeviceProgramOkFlag = 1;
 			set_modbus_reg_val(OTAPPROGRESSREGADDR, 100);//0124,升级进度
 			set_modbus_reg_val(OTASTATUSREGADDR, OTASUCCESS);
-			otactrl.UpDating = 0;//1130(升级成功)
+			g_otactrl.UpDating = 0;//1130(升级成功)
 			independentStatus.CANStartOTA = 0;
 
 		}
@@ -435,7 +435,7 @@ void FinishACPOtaAndCleanup(OTAObject* pOTA)
     delete_files_with_prefix(USB_MOUNT_POINT, "ACP"); // 删除升级文件
 	delete_files_with_prefix(USB_MOUNT_POINT, "md5"); // 删除升级文件
     independentStatus.CANStartOTA = 0;
-    otactrl.UpDating = 0;               // 升级结束标志
+    g_otactrl.UpDating = 0;               // 升级结束标志
     // set_charger_cmd(BMS_POWER_DEFAULT); // 恢复默认充电状态
 	set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
     set_modbus_reg_val(OTASTATUSREGADDR, OTAIDLE); // 设置状态寄存器为 IDLE
@@ -450,7 +450,7 @@ void FinishDCDCOtaAndCleanup(OTAObject* pOTA)
     delete_files_with_prefix(USB_MOUNT_POINT, "DCDC"); // 删除升级文件
 	delete_files_with_prefix(USB_MOUNT_POINT, "md5"); // 删除升级文件
     independentStatus.CANStartOTA = 0;
-    otactrl.UpDating = 0;               // 升级结束标志
+    g_otactrl.UpDating = 0;               // 升级结束标志
     // set_charger_cmd(BMS_POWER_DEFAULT); // 恢复默认充电状态
 	set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);
     set_modbus_reg_val(OTASTATUSREGADDR, OTAIDLE); // 设置状态寄存器为 IDLE

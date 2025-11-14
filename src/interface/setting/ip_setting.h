@@ -15,6 +15,14 @@
 
 #define MODBUS_ETH_NUM  "eht1"
 
+typedef struct
+{
+	uint8_t flag;
+	uint32_t ip;
+
+} Setting_t;
+extern Setting_t g_ipsetting;
+
 void settings_Init();
 void save_ip_to_conffile(uint16_t address, uint16_t data);
 void set_system_time_from_bcu(void);

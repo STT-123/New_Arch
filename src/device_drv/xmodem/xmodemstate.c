@@ -2,13 +2,12 @@
 // #include "C_OTAStateMonitor.h"
 #include "xmodemstate.h"
 #include "interface/modbus/modbus_defines.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "xmodemlisten.h"
 #include "function_task/modbustcp_task/modbustcp_task.h"
 #include "xmodemdata.h"
 #include "interface/bms/bms_analysis.h"
 #include "interface/log/log.h"
-#include "main.h"
 
 struct timespec AC_OTA_lastCheckTick;
 

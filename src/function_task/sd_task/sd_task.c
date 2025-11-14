@@ -2,11 +2,9 @@
 #include "sd_task.h"
 #include "device_drv/modbustcp_pro/modbustcp_pro.h"
 #include "interface/modbus/modbus_defines.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/log/log.h"
-#include "main.h"
 
-unsigned short g_ota_flag = 0;
 
 /*==========================================================**/
 void *SDCardDataSaveTask(void *arg)
@@ -28,8 +26,7 @@ void *SDCardDataSaveTask(void *arg)
     {
         usleep(3000 * 1000);
 
-        // 获取 ota标识 和 sd卡初始化标识
-        get_modbus_reg_val(OTASTATUSREGADDR, &g_ota_flag);
+        // 获取sd卡初始化标识
         get_modbus_reg_val(0x6721, &SD_INIT_flag);//接收上位机指令
 
         // 如果sd卡未初始化 则初始化sd卡

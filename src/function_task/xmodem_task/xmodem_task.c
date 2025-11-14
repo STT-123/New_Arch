@@ -2,13 +2,14 @@
 #include "function_task/modbustcp_task/modbustcp_task.h"
 #include "interface/log/log.h"
 #include "device_drv/xmodem/xmodemstate.h"
-#include "main.h"
 #include "interface/bms/bms_analysis.h"
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/xmodem/xmodemlisten.h"
 #include "device_drv/xmodem/xmodemdata.h"
-// #include "Net_Config_Task.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
 
+
+// #include "Net_Config_Task.h"
 pthread_t TcpServerExample_TASKHandle;
 unsigned char XmodemSendCFlag;
 volatile unsigned long prvmsgtimer = 0;
@@ -30,11 +31,11 @@ void *XmodemCommTask(void *arg)
     step = 1;
     while (1)
     {
-        if (otactrl.UpDating == 1)
+        if (g_otactrl.UpDating == 1)
         {
             set_TCU_PowerUpCmd(BMS_POWER_UPDATING);
         }
-        if (otactrl.OTAStart == 0 && (sblfilenumber != 0) && ((GetTimeDifference_ms(AC_OTA_lastCheckTick)) >= 30000))
+        if (g_otactrl.OTAStart == 0 && (sblfilenumber != 0) && ((GetTimeDifference_ms(AC_OTA_lastCheckTick)) >= 30000))
         {
             SBl_index = 0;
             APP_index = 0;
@@ -51,7 +52,7 @@ void *XmodemCommTask(void *arg)
         }
         else
         {
-            if ((curotaCtrregval != prvotaCtrregval) && (otactrl.OTAStart == 0))
+            if ((curotaCtrregval != prvotaCtrregval) && (g_otactrl.OTAStart == 0))
             {
                 printf("ota curotaCtrregval 0x%x prvotaCtrregval 0x%x\n", curotaCtrregval, prvotaCtrregval);
 
@@ -163,7 +164,7 @@ void *XmodemCommTask(void *arg)
                                 if (times >= 30)
                                 {
                                     times = 0;
-                                    otactrl.UpDating = 0;
+                                    g_otactrl.UpDating = 0;
                                     LOG("[Xmodem] Write C 30 times over time!");
                                     break;
                                 }
@@ -196,7 +197,7 @@ void *XmodemCommTask(void *arg)
                 if (prvotaCtrregval == 0x0008 && curotaCtrregval == 0x0080)
                 {
                     set_modbus_reg_val(OTASTATUSREGADDR, OTASTARTRUNNING);
-                    otactrl.OTAStart = 1;
+                    g_otactrl.OTAStart = 1;
                 }
 
                 // 0x0000 -> !0x0001
@@ -235,7 +236,7 @@ void *XmodemCommTask(void *arg)
             {
                 if (get_timeout_flag() == 1)
                 {
-                    otactrl.UpDating = 0;
+                    g_otactrl.UpDating = 0;
                     set_modbus_reg_val(OTASTATUSREGADDR, 0);
                 }
                 prvmsgtimer = curmsgtimer = 0;

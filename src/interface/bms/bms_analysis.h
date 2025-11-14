@@ -12,7 +12,7 @@
 #include <linux/can/error.h>
 #include <linux/can.h>
 #include <stdint.h>
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "bms_simulink/rtwtypes.h"
 #include "bms_simulink/CANRcvFcn_types.h"
 

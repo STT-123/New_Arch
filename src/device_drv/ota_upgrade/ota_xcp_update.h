@@ -15,7 +15,7 @@
 #include <sys/time.h> // for timeval 
 #include <sys/stat.h>
 #include <sys/time.h>
-#include "interface/G_GloabalVariable.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
 #include <linux/types.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>

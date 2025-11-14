@@ -1,9 +1,12 @@
 #include "ota_ecu_update.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/log/log.h"
 #include "interface/bms/bms_analysis.h"
 #include "interface/modbus/modbus_defines.h"
 #include "device_drv/xmodem/xmodemdata.h"
+#include "device_drv/ota_upgrade/ota_fun.h"
+#include "device_drv/sd_store/sd_store.h"
+
 #define APP_PATH  "/opt/xcharge"  
 
 ECUStatus ecustatus;
@@ -11,7 +14,7 @@ ECUStatus ecustatus;
 
 void ECU_OTA(OTAObject *pOTA)
 {
-	LOG("[OTA] ECU_OTA start!, pOTA->OTAStart:%d\r\n", pOTA->OTAStart);
+    LOG("[OTA] ECU_OTA start!, pOTA->OTAStart:%d\r\n", pOTA->OTAStart);
     if (!pOTA->OTAStart) return;
     
     memset(&ecustatus, 0, sizeof(ECUStatus));
@@ -23,109 +26,144 @@ void ECU_OTA(OTAObject *pOTA)
     {
         char cmd[512];
         set_modbus_reg_val(OTAPPROGRESSREGADDR, 10); // 0124
-		// 步骤1: 检查OTA文件是否存在
-		if(ecustatus.ErrorReg == 0)
-		{
-			char otafilenamestr1[OTAFILENAMEMAXLENGTH + 64] = {'\0'};
-			snprintf(otafilenamestr1, sizeof(otafilenamestr1), "%s/%s", USB_MOUNT_POINT, pOTA->OTAFilename);
-			LOG("OTA file path: %s\r\n", otafilenamestr1);
-
-			// 检查文件是否存在
-			if (access(otafilenamestr1, F_OK) != 0) {
-				printf("OTA file does not exist: %s\n", otafilenamestr1);
-				ecustatus.ErrorReg |= 1 << 2;
-				return;
-			}
-
-			// 使用C语言FILE操作验证文件（不依赖shell的file命令）
-			if (!verify_bin_file(otafilenamestr1)) {
-				printf("File verification failed: %s\n", pOTA->OTAFilename);
-				ecustatus.ErrorReg |= 1 << 4;
-				return;
-			}
-			
-			LOG("[OTA] ECU bin file verified: %s\n", pOTA->OTAFilename);
-		}
-
-		set_modbus_reg_val(OTAPPROGRESSREGADDR, 40); // 0124
-		// 步骤2: 备份原有程序（可选但推荐）
-		// 更安全的更新方式
-		if(ecustatus.ErrorReg == 0)
-		{
-			memset(cmd, 0, sizeof(cmd));
-			
-			// 方法1: 原子替换
-			snprintf(cmd, sizeof(cmd), "cp \"%s/%s\" \"%s/.bat_ecu.tmp\" && mv \"%s/.bat_ecu.tmp\" \"%s/bat_ecu\"", 
-					USB_MOUNT_POINT, pOTA->OTAFilename, APP_PATH, APP_PATH, APP_PATH);	
-			LOG("[OTA] Copy command: %s\n", cmd);
-			
-			int ret = system(cmd);
-			if (ret == 0) {
-				LOG("[OTA] Program update successful.\n");
-			} else {
-				LOG("[OTA] Program update failed.\n");
-				ecustatus.ErrorReg |= 1 << 2;
-			}
-		}
-        // 步骤3: 复制新的可执行文件
-
-		set_modbus_reg_val(OTAPPROGRESSREGADDR, 60); // 0124
+        
+        // 步骤1: 修改文件后缀为.deb并检查是否已存在
         if(ecustatus.ErrorReg == 0)
         {
+            char deb_filename[256] = {'\0'};
+            char source_file[512] = {'\0'};
+            char target_file[512] = {'\0'};
+            
+            // 将原文件名从.bin改为.deb
+            char *dot_pos = strrchr(pOTA->OTAFilename, '.');
+            if (dot_pos && strcmp(dot_pos, ".bin") == 0) {
+                // 替换.bin为.deb
+                strncpy(deb_filename, pOTA->OTAFilename, dot_pos - pOTA->OTAFilename);
+                strcat(deb_filename, ".deb");
+            } else {
+                // 如果没有.bin后缀，直接添加.deb
+                snprintf(deb_filename, sizeof(deb_filename), "%s.deb", pOTA->OTAFilename);
+            }
+            
+            // 构建源文件和目标文件路径
+            snprintf(source_file, sizeof(source_file), "%s/%s", USB_MOUNT_POINT, pOTA->OTAFilename);
+            snprintf(target_file, sizeof(target_file), "/tmp/%s", deb_filename);
+            
+            LOG("Source file path: %s\n", source_file);
+            LOG("Target file path: %s\n", target_file);
+
+            // 检查源文件是否存在
+            if (access(source_file, F_OK) != 0) {
+                printf("OTA source file does not exist: %s\n", source_file);
+                ecustatus.ErrorReg |= 1 << 2;
+                return;
+            }
+
+            // 验证源文件
+            if (!verify_bin_file(source_file)) {
+                printf("Source file verification failed: %s\n", source_file);
+                ecustatus.ErrorReg |= 1 << 4;
+                return;
+            }
+            
+            LOG("[OTA] ECU bin file verified: %s\n", pOTA->OTAFilename);
+            
+            // 检查目标文件是否已存在
+            if (access(target_file, F_OK) == 0) {
+                LOG("[OTA] Target file already exists in /tmp: %s, skipping copy and preparing for reboot\n", deb_filename);
+                // 文件已存在，设置进度并准备重启
+                set_modbus_reg_val(OTAPPROGRESSREGADDR, 100);
+                
+                // 完成OTA清理工作
+                FinshhECUOtaAndCleanup(pOTA);
+                
+                // 延迟后重启
+                LOG("[OTA] File already exists, preparing to reboot...\n");
+                system("sync");
+                
+                sleep(5); // 5秒后重启
+                system("reboot");
+                return; // 直接返回，不执行后续代码
+            }
+            
+            LOG("[OTA] Target file does not exist in /tmp, proceeding with copy\n");
+        }
+
+        set_modbus_reg_val(OTAPPROGRESSREGADDR, 40); // 0124
+        
+        // 步骤2: 复制文件到/tmp目录（使用修改后的文件名）
+        if(ecustatus.ErrorReg == 0)
+        {
+            char deb_filename[256] = {'\0'};
+            char source_file[512] = {'\0'};
+            char target_file[512] = {'\0'};
+            
+            // 同样处理文件名
+            char *dot_pos = strrchr(pOTA->OTAFilename, '.');
+            if (dot_pos && strcmp(dot_pos, ".bin") == 0) {
+                strncpy(deb_filename, pOTA->OTAFilename, dot_pos - pOTA->OTAFilename);
+                strcat(deb_filename, ".deb");
+            } else {
+                snprintf(deb_filename, sizeof(deb_filename), "%s.deb", pOTA->OTAFilename);
+            }
+            
+            snprintf(source_file, sizeof(source_file), "%s/%s", USB_MOUNT_POINT, pOTA->OTAFilename);
+            snprintf(target_file, sizeof(target_file), "/tmp/%s", deb_filename);
+            
             memset(cmd, 0, sizeof(cmd));
-            // 将.bin文件复制为目标可执行文件（去掉.bin后缀）
-            snprintf(cmd, sizeof(cmd), "cp \"%s/%s\" \"%s/bat_ecu\"", 
-                     USB_MOUNT_POINT, pOTA->OTAFilename, APP_PATH);
+            snprintf(cmd, sizeof(cmd), "cp \"%s\" \"%s\"", source_file, target_file);
             LOG("[OTA] Copy command: %s\n", cmd);
             
             int ret = system(cmd);
             if (ret == 0) {
-                LOG("[OTA] Program copy successful.\n");
-            } 
-            else 
-            {
-                LOG("[OTA] Program copy failed.\n");
+                LOG("[OTA] File copy to /tmp successful: %s\n", deb_filename);
+            } else {
+                LOG("[OTA] File copy to /tmp failed\n");
                 ecustatus.ErrorReg |= 1 << 2;
             }
         }
 
-		// 步骤4: 验证复制后的文件 - 移除file命令依赖
-		set_modbus_reg_val(OTAPPROGRESSREGADDR, 80); // 0124
-		if(ecustatus.ErrorReg == 0)
-		{
-			// 使用C语言方式验证，而不是system("file ...")
-			if (!verify_bin_file("/opt/xcharge/bat_ecu")) {
-				LOG("[OTA] Copied file verification failed\n");
-				ecustatus.ErrorReg |= 1 << 4;
-			} else {
-				LOG("[OTA] Copied file verification successful\n");
-			}
-		}
-
-        // 步骤5: 设置执行权限并重启
+        set_modbus_reg_val(OTAPPROGRESSREGADDR, 80); // 0124
+        
+        // 步骤3: 验证复制后的文件
         if(ecustatus.ErrorReg == 0)
         {
-            memset(cmd, 0, sizeof(cmd));
-            snprintf(cmd, sizeof(cmd), "chmod 755 \"%s/bat_ecu\"", APP_PATH);
-            int ret = system(cmd);
-            if (ret == 0) {
-                LOG("[OTA] Permission settings successful.\n");
-				set_modbus_reg_val(OTAPPROGRESSREGADDR, 0); // 0124
-                // 完成OTA清理工作
-                FinshhECUOtaAndCleanup(pOTA);
-                
-                // 确保数据写入磁盘并重启
-                LOG("[OTA] Syncing filesystem and rebooting...\n");
-                system("sync");
-
-                sleep(5);//5s后重启
-                system("reboot");
-            } 
-            else 
-            {
-                LOG("[OTA] Permission g_ipsetting failed.\n");
-                ecustatus.ErrorReg |= 1 << 3;
+            char deb_filename[256] = {'\0'};
+            char target_file[512] = {'\0'};
+            
+            // 处理文件名
+            char *dot_pos = strrchr(pOTA->OTAFilename, '.');
+            if (dot_pos && strcmp(dot_pos, ".bin") == 0) {
+                strncpy(deb_filename, pOTA->OTAFilename, dot_pos - pOTA->OTAFilename);
+                strcat(deb_filename, ".deb");
+            } else {
+                snprintf(deb_filename, sizeof(deb_filename), "%s.deb", pOTA->OTAFilename);
             }
+            
+            snprintf(target_file, sizeof(target_file), "/tmp/%s", deb_filename);
+            
+            if (!verify_bin_file(target_file)) {
+                LOG("[OTA] Copied file verification failed: %s\n", target_file);
+                ecustatus.ErrorReg |= 1 << 4;
+            } else {
+                LOG("[OTA] Copied file verification successful: %s\n", target_file);
+            }
+        }
+
+        // 步骤4: 完成操作并重启
+        if(ecustatus.ErrorReg == 0)
+        {
+            set_modbus_reg_val(OTAPPROGRESSREGADDR, 100); // 0124
+            
+            // 完成OTA清理工作
+            FinshhECUOtaAndCleanup(pOTA);
+            
+            // 确保数据写入磁盘并重启
+            LOG("[OTA] File copied to /tmp successfully, preparing to reboot...\n");
+            system("sync");
+            
+            sleep(5); // 5秒后重启
+            //system("reboot");
         }
 
         // 错误处理
@@ -136,22 +174,15 @@ void ECU_OTA(OTAObject *pOTA)
             LOG("[OTA] can id 0x%x device ota failed, error register val 0x%x!\r\n", 
                 pOTA->deviceID, ecustatus.ErrorReg);
             set_modbus_reg_val(OTASTATUSREGADDR, OTAFAILED);
-            
-            // 恢复备份（可选）
-            if(access("/opt/xcharge/bat_ecu.backup", F_OK) == 0) {
-                printf("Attempting to restore backup...\n");
-                snprintf(cmd, sizeof(cmd), "cp \"%s/bat_ecu.backup\" \"%s/bat_ecu\"", APP_PATH, APP_PATH);
-                system(cmd);
-            }
         }
         
         pOTA->OTAStart = 0;
     }
-	else{
-		LOG("[OTA] pOTA->deviceID = 0x%x, pOTA->deviceType = %d\r\n",pOTA->deviceID, pOTA->deviceType);
-		ecustatus.ErrorReg = 1;
-		ecustatus.ErrorDeviceID = pOTA->deviceID;
-	}
+    else{
+        LOG("[OTA] pOTA->deviceID = 0x%x, pOTA->deviceType = %d\r\n",pOTA->deviceID, pOTA->deviceType);
+        ecustatus.ErrorReg = 1;
+        ecustatus.ErrorDeviceID = pOTA->deviceID;
+    }
 }
 
 
@@ -162,7 +193,7 @@ void FinshhECUOtaAndCleanup(OTAObject* pOTA)
     pOTA->OTAStart = 0;
 	// delete_files_with_prefix(USB_MOUNT_POINT, "XC");//  这个要删除升级文件，判断ecustatus状态，成功或者失败删除
 	// delete_files_with_prefix(USB_MOUNT_POINT, "md5");// 
-	otactrl.UpDating = 0;//1130(升级结束)
+	g_otactrl.UpDating = 0;//1130(升级结束)
 	ecustatus.CANStartOTA = 0;
 	// set_charger_cmd(BMS_POWER_DEFAULT);
     set_TCU_PowerUpCmd(BMS_POWER_DEFAULT);

@@ -4,7 +4,6 @@
 #include "interface/queue/queue.h"
 #include "interface/can/mycan.h"
 #include "interface/epoll/myepoll.h"
-#include "main.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +11,7 @@
 #include <stdbool.h>
 #include "interface/bms/bms_analysis.h"
 
-#include "G_GloabalVariable.h"
+#include "globalVariable.h"
 #include <pthread.h>
 #include "interface/log/log.h"
 

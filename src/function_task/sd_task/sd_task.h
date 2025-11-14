@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include "device_drv/sd_store/sd_store.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
 
 extern unsigned short g_ota_flag;
 

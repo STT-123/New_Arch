@@ -1,12 +1,12 @@
 #define _GNU_SOURCE
 #include "ota_xcp_update.h"
-#include "interface/G_GloabalVariable.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "device_drv/bmu_deal/bmu_deal.h"
 #include "interface/modbus/modbus_defines.h"
 #include "interface/log/log.h"
 #include "device_drv/xmodem/xmodemdata.h"
-#include "main.h"
+#include "device_drv/sd_store/sd_store.h"
+
 XCPStatus xcpstatus;
 unsigned int OTA_RecvPacketCount = 0;
 signed char XcpSendConnectCMD(unsigned int id, unsigned char xcpobjectid)
@@ -1124,7 +1124,7 @@ void FinshhBCUBMUOtaAndCleanup(OTAObject* pOTA)
     pOTA->OTAStart = 0;
 	// delete_files_with_prefix(USB_MOUNT_POINT, "XC");//  这个要删除升级文件，判断xcpstatus状态，成功或者失败删除
     // delete_files_with_prefix(USB_MOUNT_POINT, "md5"); // 删除升级文件
-	otactrl.UpDating = 0;//1130(升级结束)
+	g_otactrl.UpDating = 0;//1130(升级结束)
 	memset(&xcpstatus,0,sizeof(xcpstatus));
 	// set_charger_cmd(BMS_POWER_DEFAULT);
     set_OTA_XCPConnect(0);//删除跳转到BOOT的条件,OTA_XCPConnect为0xFF才会跳转到BOOT

@@ -1,7 +1,8 @@
 
 #include "updownfile.h"
 #include "./ocpp_app_update.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
+#include "device_drv/sd_store/sd_store.h"
 static size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t realsize = size * nmemb;
     FILE *fp = (FILE *)userp;

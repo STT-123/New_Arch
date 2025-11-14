@@ -6,9 +6,8 @@
 #include "device_drv/ocpp_protocol/ocpp/ocpp_messages.h"
 /*------以上暂时为ocpp调试使用-----------*/
 
-
 #include "interface/bms/bms_simulink/CANRcvFcn.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "interface/log/log.h"
 #include "interface/epoll/myepoll.h"
 #include "interface/setting/ip_setting.h"
@@ -21,11 +20,20 @@
 #include "function_task/xmodem_task/xmodem_task.h"
 #include "function_task/abnormal_check_task/abnormal_check_task.h"
 
-OTAObject otactrl;
 
 
 void update_bat_data(sqlite3 *db);
 struct tm utc_timeinfo;
+static void printf_version(void)
+{
+    char compile_date[12] = {0}, compile_time[20] = {0};
+    sprintf(compile_date, "%s", __DATE__);
+    sprintf(compile_time, "%s", __TIME__);
+    LOG("========================================================= \n");
+    LOG("[VERSION] BAT ECU_EU START RUN!!!. \n");
+    LOG("[VERSION] Software compilation time %s--%s. \n", compile_date, compile_time);
+    LOG("========================================================= \n");
+}
 
 int main(int argc, char **argv)
 {
@@ -88,16 +96,6 @@ int main(int argc, char **argv)
     }
 }
 
-static void printf_version(void)
-{
-    char compile_date[12] = {0}, compile_time[20] = {0};
-    sprintf(compile_date, "%s", __DATE__);
-    sprintf(compile_time, "%s", __TIME__);
-    LOG("========================================================= \n");
-    LOG("[VERSION] BAT ECU_EU START RUN!!!. \n");
-    LOG("[VERSION] Software compilation time %s--%s. \n", compile_date, compile_time);
-    LOG("========================================================= \n");
-}
 
 // ✅ 每秒更新一次数据（可由外部线程或主循环调用）
 void update_bat_data(sqlite3 *db)

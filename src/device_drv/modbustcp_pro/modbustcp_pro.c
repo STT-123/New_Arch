@@ -1,10 +1,10 @@
 #include "modbustcp_pro.h"
-#include "interface/G_GloabalVariable.h"
+#include "interface/globalVariable.h"
 #include "function_task/modbustcp_task/modbustcp_task.h"
 #include "device_drv/bcu_deal/bcu_deal.h"
 #include "device_drv/sd_store/sd_store.h"
 #include "interface/log/log.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
 extern unsigned short g_ota_flag;
 
 // modbus接收数据处理，只处理06的写入操作
@@ -28,7 +28,7 @@ extern unsigned short g_ota_flag;
         if ((address >= REGISTERS_START_ADDRESS) && (address < (REGISTERS_START_ADDRESS + REGISTERS_NB)))
         {
             // 开关机操作
-            if ((address == 0x6700) && (otactrl.UpDating == 0)) // 过滤，自己需要判断是否在升级来进行自主上下电
+            if ((address == 0x6700) && (g_otactrl.UpDating == 0)) // 过滤，自己需要判断是否在升级来进行自主上下电
             {
                 if (data == 0)
                 {

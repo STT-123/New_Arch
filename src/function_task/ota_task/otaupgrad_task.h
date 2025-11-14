@@ -6,8 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <pthread.h>
-#include "./main.h"
-
+#include "device_drv/ota_upgrade/ota_fun.h"
 #define BMUMAXNUM 15
 void ota_Upgrade_TaskCreate(void);
 #endif
