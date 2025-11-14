@@ -1,12 +1,12 @@
 #include "xmodem_task.h"
 #include "function_task/modbustcp_task/modbustcp_task.h"
 #include "interface/log/log.h"
-#include "device_drv/xmodem_drv/xmodemstate.h"
+#include "device_drv/xmodem/xmodemstate.h"
 #include "main.h"
-#include "interface/BMS/C_BMSAnalysis.h"
+#include "interface/bms/bms_analysis.h"
 #include "interface/modbus/modbus_defines.h"
-#include "device_drv/xmodem_drv/xmodemlisten.h"
-#include "device_drv/xmodem_drv/xmodemdata.h"
+#include "device_drv/xmodem/xmodemlisten.h"
+#include "device_drv/xmodem/xmodemdata.h"
 // #include "Net_Config_Task.h"
 
 pthread_t TcpServerExample_TASKHandle;

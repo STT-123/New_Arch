@@ -1,21 +1,21 @@
 #define _GNU_SOURCE
 #include "main.h"
 #include "function_task/bcu_task/bcu_task.h"
-#include "device_drv/bcu_drv/bcu_drv.h"
+#include "device_drv/bcu_deal/bcu_deal.h"
 #include "interface/log/log.h"
-#include "interface/BMS/C_BMSAnalysis.h"
-#include "interface/BMS/bms/CANRcvFcn.h"
+#include "interface/bms/bms_analysis.h"
+#include "interface/bms/bms_simulink/CANRcvFcn.h"
 #include "interface/modbus/modbus_defines.h"
-#include "device_drv/sd_deal/sd_deal.h"
+#include "device_drv/sd_store/sd_store.h"
 #include "function_task/sd_task/sd_task.h"
 
 
 pthread_t BCURecDel_TASKHandle;
-void *BCU_DealTask(void *arg)
+void *bcu_DealTask(void *arg)
 {
     struct canfd_frame canrev_frame = {0};
     CANFD_MESSAGE can_msg_buf ={0};
-    LOG("[BCU] Func_thread_can0_dealwith is running\n");
+    LOG("Func_thread_can0_dealwith is running\n");
     int len = 0;
     int bms_analysis_done = 0;
     struct timespec start_time;
@@ -54,7 +54,7 @@ void *BCU_DealTask(void *arg)
                         Drv_BMS_Analysis(0);
 
                         bms_analysis_done = 1;
-                        LOG("[BCU] Drv_BMS_Analysis executed after 10s delay\r\n");
+                        LOG("Drv_BMS_Analysis executed after 10s delay\r\n");
                     }
                 }
             }
@@ -65,20 +65,20 @@ void *BCU_DealTask(void *arg)
 }
 
 
-void BCU_DealTaskCreate(void)
+void bcu_DealTaskCreate(void)
 {
     int ret;
     do
     {
-        ret = pthread_create(&BCURecDel_TASKHandle, NULL, BCU_DealTask, NULL);
+        ret = pthread_create(&BCURecDel_TASKHandle, NULL, bcu_DealTask, NULL);
         if (ret != 0)
         {
-            LOG("[BCU] Failed to create BCU_DealTask thread : %s", strerror(ret));
+            LOG("Failed to create BCU_DealTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("[BCU] BCU_DealTask thread created successfully.\r\n");
+            LOG("BCU_DealTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

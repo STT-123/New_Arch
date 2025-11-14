@@ -56,9 +56,9 @@ static void *epoll_thread_func(void *arg)
     return NULL;
 }
 
-int my_epoll_init(void)
+int my_epoll_Init(void)
 {
-    LOG("[EPOLL] my_epoll_init ");
+    LOG("[EPOLL] my_epoll_Init ");
 
     int err = 0;
     my_epollfd = epoll_create(50); // 内核2.6.8+参数无意义，大于零即可

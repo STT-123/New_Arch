@@ -24,6 +24,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 
-void BCU_DealTaskCreate(void);
+void bcu_DealTaskCreate(void);
 
 #endif

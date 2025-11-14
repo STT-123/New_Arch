@@ -26,24 +26,29 @@ SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin
 
-# 使用本地库路径
+# stt test，这个是使用目标机自己库的时候，要是在虚拟机也用这个，要保证/opt/xcharge/lib下面有库文件
 LOCAL_LIB_DIR := /opt/xcharge/lib
-# LIB_DIR := $(SYSROOT)/usr/lib
+
+# 使用本地库路径,这个是自己本地使用库的时候
+#LIB_DIR := $(SYSROOT)/usr/lib
+
 INC_DIR := $(SYSROOT)/usr/include
 
 # 依赖的库
 LIBS = -lwebsockets -ljson-c -lsqlite3 -lpthread -lssl -lcrypto -lzstd -lm -lzlog -lcurl -latomic
 
-# 头文件包含路径（自动加源目录 + SYSROOT include）
-# INCLUDES = $(shell find $(SRC_DIR) -type d) $(INC_DIR)
-# CFLAGS = -Wall -O2 -MMD -MP $(addprefix -I, $(INCLUDES))
-#LDFLAGS = -L$(LIB_DIR) $(LIBS)
 
 # test
 INCLUDES = $(shell find $(SRC_DIR) -type d)
 CFLAGS = -Wall -O2 -MMD -MP $(addprefix -I, $(INCLUDES))
 # 链接时使用本地库路径，并设置运行时库搜索路径
 LDFLAGS = -L$(LOCAL_LIB_DIR) -Wl,-rpath,/opt/xcharge/lib $(LIBS)
+
+# 头文件包含路径（自动加源目录 + SYSROOT include）
+ #INCLUDES = $(shell find $(SRC_DIR) -type d) $(INC_DIR)
+ #CFLAGS = -Wall -O2 -MMD -MP $(addprefix -I, $(INCLUDES))
+ #LDFLAGS = -L$(LIB_DIR) $(LIBS)
+
 
 # 源文件与目标文件
 SRCS = $(shell find $(SRC_DIR) -name '*.c' -type f)

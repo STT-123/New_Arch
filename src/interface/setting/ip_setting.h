@@ -12,8 +12,11 @@
 #include <arpa/inet.h> // for inet_ntoa etc.
 #include <netinet/in.h>
 #include <sys/stat.h> // stat()
-void G_settings_init();
-void G_ip_set_deal(uint16_t address, uint16_t data);
-void G_set_system_time_from_bcu(void);
+
+#define MODBUS_ETH_NUM  "eht1"
+
+void settings_Init();
+void save_ip_to_conffile(uint16_t address, uint16_t data);
+void set_system_time_from_bcu(void);
 int set_ip_address(const char *if_name, const char *ip_addr);
 #endif

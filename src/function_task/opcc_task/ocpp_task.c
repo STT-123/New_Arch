@@ -1,5 +1,5 @@
 #include "ocpp_task.h"
-#include "device_drv/ocpp_drv/ocpp/ws_client.h"
+#include "device_drv/ocpp_protocol/ocpp/ws_client.h"
 #include "interface/log/log.h"
 
 pthread_t ws_thread;

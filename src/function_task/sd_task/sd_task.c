@@ -1,21 +1,20 @@
 #define _GNU_SOURCE
 #include "sd_task.h"
-#include "device_drv/sd_deal/sd_deal.h"
-#include "device_drv/modbustcp_drv/modbustcp_drv.h"
+#include "device_drv/modbustcp_pro/modbustcp_pro.h"
 #include "interface/modbus/modbus_defines.h"
 #include "interface/G_GloabalVariable.h"
 #include "interface/log/log.h"
 #include "main.h"
 
 unsigned short g_ota_flag = 0;
-// 检查挂载点是否存在
 
-
+/*==========================================================**/
 void *SDCardDataSaveTask(void *arg)
 {
     const char *mount_point = USB_MOUNT_POINT; // 使用自动挂载的路径
-
     uint16_t SD_INIT_flag = 0;
+
+    sd_storeInit();//SD卡存储消息的初始化
 
     // 1. 检查挂载点
     if (ensure_mount_point(mount_point) != 0)
@@ -53,7 +52,7 @@ void *SDCardDataSaveTask(void *arg)
         {
             if (get_ftp_read_file_flag() == 0)
             {
-                Drv_write_buffer_to_file(&canDoubleRingBuffer); // 将缓冲区内容写入文件
+                Drv_write_buffer_to_file(); // 将缓冲区内容写入文件
             }
         }
         else

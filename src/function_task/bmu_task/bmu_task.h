@@ -23,6 +23,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 
-void BMU_DealTaskCreate(void);
+void bmu_DealTaskCreate(void);
 
 #endif

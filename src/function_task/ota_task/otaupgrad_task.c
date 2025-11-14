@@ -1,24 +1,24 @@
 #include "otaupgrad_task.h"
-#include "device_drv/ota_drv/C_OTAOtherUpdate.h"
-#include "device_drv/ota_drv/C_OTAXCPUpdate.h"
-#include "device_drv/ota_drv/C_OTAUDSUpdate.h"
+#include "device_drv/ota_upgrade/ota_other_update.h"
+#include "device_drv/ota_upgrade/ota_xcp_update.h"
+#include "device_drv/ota_upgrade/ota_uds_update.h"
 #include "interface/G_GloabalVariable.h"
 #include <pthread.h>
 #include "interface/log/log.h"
-#include "device_drv/ota_drv/C_OTAAPPUpdate.h"
-#include "interface/BMS/C_BMSAnalysis.h"
-#include "device_drv/xmodem_drv/xmodemstate.h"
+#include "device_drv/ota_upgrade/ota_ecu_update.h"
+#include "interface/bms/bms_analysis.h"
+#include "device_drv/xmodem/xmodemstate.h"
 #include "interface/modbus/modbus_defines.h"
 #include "main.h"
-#include "device_drv/ocpp_drv/ocpp/ws_client.h"
-#include "device_drv/bcu_drv/bcu_drv.h"
+#include "device_drv/ocpp_protocol/ocpp/ws_client.h"
+#include "device_drv/bcu_deal/bcu_deal.h"
 
 pthread_t OTAUpgrad_TASKHandle;
 volatile unsigned int CurrentOTADeviceCanID = 0x1821FF10;
 
 
 
-void *OTA_Upgrad_Task(void *arg)
+void *ota_Upgrade_Task(void *arg)
 {
     OTAObject *pOTA = (OTAObject *)arg;
     CurrentOTADeviceCanID = ACPOTACANID;
@@ -311,12 +311,12 @@ void *OTA_Upgrad_Task(void *arg)
         usleep(10 * 1000);
     }
 }
-void OTAUpgradTaskCreate(void)
+void ota_Upgrade_TaskCreate(void)
 {
     int ret;
     do
     {
-        ret = pthread_create(&OTAUpgrad_TASKHandle, NULL, OTA_Upgrad_Task, &otactrl);
+        ret = pthread_create(&OTAUpgrad_TASKHandle, NULL, ota_Upgrade_Task, &otactrl);
         if (ret != 0)
         {
             LOG("[OTA] Failed to create SerialLedTask thread : %s", strerror(ret));

@@ -4,8 +4,8 @@
 #include "interface/modbus/modbus_defines.h"
 #include "interface/G_GloabalVariable.h"
 #include "interface/setting/ip_setting.h"
-#include "interface/BMS/C_BMSAnalysis.h"
-#include "device_drv/modbustcp_drv/modbustcp_drv.h"
+#include "interface/bms/bms_analysis.h"
+#include "device_drv/modbustcp_pro/modbustcp_pro.h"
 #include "main.h"
 
 
@@ -38,7 +38,7 @@ void *ModbusTCPServerTask(void *arg)
     {
         sprintf(modbus_ip, "%d.%d.%d.%d", (g_ipsetting.ip >> 24) & 0xFF, (g_ipsetting.ip >> 16) & 0xFF, (g_ipsetting.ip >> 8) & 0xFF, g_ipsetting.ip & 0xFF);
     }
-    set_ip_address("eth1", modbus_ip);//设置当前机的网口的ip地址
+    set_ip_address(MODBUS_ETH_NUM, modbus_ip);//设置当前机的网口的ip地址
     ctx = modbus_new_tcp(modbus_ip, 502);//新建一个tcp服务端
     LOG("[ModbusTcp] ctx =%d ,modbus ip =%s \r\n", ctx, modbus_ip);
 

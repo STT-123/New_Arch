@@ -9,5 +9,5 @@
 #include "./main.h"
 
 #define BMUMAXNUM 15
-void OTAUpgradTaskCreate(void);
+void ota_Upgrade_TaskCreate(void);
 #endif

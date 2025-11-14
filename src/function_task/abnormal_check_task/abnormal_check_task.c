@@ -1,7 +1,7 @@
 #include "abnormal_check_task.h"
-#include "device_drv/abncheck_drv/abncheck_drv.h"
-#include "interface/BMS/C_BMSAnalysis.h"
-#include "interface/BMS/bms/CANRcvFcn.h"
+#include "device_drv/abncheck/abncheck.h"
+#include "interface/bms/bms_analysis.h"
+#include "interface/bms/bms_simulink/CANRcvFcn.h"
 #include <pthread.h>
 #include "interface/log/log.h"
 pthread_t AnormalDetectionTask_TASKHandle;

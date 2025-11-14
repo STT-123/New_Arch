@@ -1,27 +1,26 @@
 #include <time.h>
-#include "device_drv/ocpp_drv/ocpp/batdata.h"
-#include "device_drv/ocpp_drv/ocpp/project.h"
-#include "device_drv/ocpp_drv/ocpp/message_queue.h"
-#include "device_drv/ocpp_drv/ocpp/sqlite_storage.h"
-#include "device_drv/ocpp_drv/ocpp/ocpp_messages.h"
+#include "device_drv/ocpp_protocol/ocpp/batdata.h"
+#include "device_drv/ocpp_protocol/ocpp/project.h"
+#include "device_drv/ocpp_protocol/ocpp/message_queue.h"
+#include "device_drv/ocpp_protocol/ocpp/sqlite_storage.h"
+#include "device_drv/ocpp_protocol/ocpp/ocpp_messages.h"
 /*------以上暂时为ocpp调试使用-----------*/
 
-#include "device_drv/modbustcp_drv/modbustcp_drv.h"
+
+#include "interface/bms/bms_simulink/CANRcvFcn.h"
 #include "interface/G_GloabalVariable.h"
 #include "interface/log/log.h"
 #include "interface/epoll/myepoll.h"
-// #include "interface/BMS/bms/CANRcvFcn.h"
-// #include "interface/BMS/bms/CANRcvFcn.h"
 #include "interface/setting/ip_setting.h"
-#include "device_drv/bcu_drv/bcu_drv.h"
-#include "device_drv/bmu_drv/bmu_drv.h"
-#include "device_drv/sd_deal/sd_deal.h"
-#include "function_task/ota_task/otaupgrad_task.h"
+#include "device_drv/bcu_deal/bcu_deal.h"
+#include "device_drv/bmu_deal/bmu_deal.h"
+#include "device_drv/modbustcp_pro/modbustcp_pro.h"
 #include "function_task/bcu_task/bcu_task.h"
 #include "function_task/bmu_task/bmu_task.h"
-#include "function_task/abnormal_check_task/abnormal_check_task.h"
+#include "function_task/ota_task/otaupgrad_task.h"
 #include "function_task/xmodem_task/xmodem_task.h"
-#include "interface/BMS/bms/CANRcvFcn.h"
+#include "function_task/abnormal_check_task/abnormal_check_task.h"
+
 OTAObject otactrl;
 
 
@@ -40,18 +39,16 @@ int main(int argc, char **argv)
     /*=================硬件接口初始化部分================*/
     printf_version();//初始打印
     log_init();// 日志初始化
-    my_epoll_init(); // 初始化epoll环境
-    BCU_Init(); // ecu 和 bcu通信can初始化（打开can口 绑定回调）
-    BMU_Init(); // ecu 和 bmu通信can初始化（打开can口 绑定回调）
-    Drv_init_double_ring_buffer(&canDoubleRingBuffer); // 初始化往sd卡写数据用的双环形缓冲区
-    Drv_init_can_id_history();                         // 初始化往SD卡写的can消息的缓存区
-    G_settings_init();// 判断本机IP 如果不存在 默认使用110
-    
+    settings_Init();// 判断本机IP 如果不存在 默认使用110
+    my_epoll_Init(); // 初始化epoll环境
+    bcu_Init(); // ecu 和 bcu通信can初始化（打开can口 绑定回调）
+    bmu_Init(); // ecu 和 bmu通信can初始化（打开can口 绑定回调）
 
+    
     /*=================任务初始化部分================*/
-    BCU_DealTaskCreate();//CAN 0处理任务-BCU+空调
-    BMU_DealTaskCreate();//CAN 1处理任务-BMU
-    OTAUpgradTaskCreate();//升级任务
+    bcu_DealTaskCreate();
+    bmu_DealTaskCreate();
+    ota_Upgrade_TaskCreate();//升级任务
     modbusTcpServerTaskCreate();//moduTCP服务
     XmodemCommTaskCreate();//监听OTA 存储升级文件Xmodem协议
     SDCardDataSaveTaskCreate(); // SD卡写任务
@@ -65,8 +62,8 @@ int main(int argc, char **argv)
     while (1)
     {
         sleep(1);
-         printf("Mobud[0x1012] = \r\n");
-        // printf("Mobud[0x1012] = %x\r\n",modbusBuff[0x4012-0x3000]);
+        //  printf("Mobud[0x1012] = \r\n");
+        printf("Mobud[0x1012] = %x\r\n",modbusBuff[0x4012-0x3000]);
         // enqueue_message(build_heartbeat());
 
         // update_bat_data(db); // 更新电池数据

@@ -1,17 +1,17 @@
 #define _GNU_SOURCE
 #include "bmu_task.h"
-#include "device_drv/bmu_drv/bmu_drv.h"
+#include "device_drv/bmu_deal/bmu_deal.h"
 #include "interface/log/log.h"
 #include "main.h"
-#include "interface/BMS/bms/CANRcvFcn.h"
+#include "interface/bms/bms_simulink/CANRcvFcn.h"
 #include "function_task/sd_task/sd_task.h"
 
 
-void *BMU_DealTask(void *arg)
+void *bmu_DealTask(void *arg)
 {
     // struct can_frame canrev_frame;
     CAN_MESSAGE canrev_frame;
-    LOG("[BMU] Func_thread_can1_dealwith is running\n");
+    LOG("Func_thread_can1_dealwith is running\n");
     int err = 0;
     while (1)
     {
@@ -37,20 +37,20 @@ void *BMU_DealTask(void *arg)
 
 
 pthread_t BMURecvDel_TASKHandle;
-void BMU_DealTaskCreate(void)
+void bmu_DealTaskCreate(void)
 {
     int ret;
     do
     {
-        ret = pthread_create(&BMURecvDel_TASKHandle, NULL, BMU_DealTask, NULL);
+        ret = pthread_create(&BMURecvDel_TASKHandle, NULL, bmu_DealTask, NULL);
         if (ret != 0)
         {
-            LOG("[BMU] Failed to create BMU_DealTask thread : %s", strerror(ret));
+            LOG("Failed to create BMU_DealTask thread : %s", strerror(ret));
             sleep(1);
         }
         else
         {
-            LOG("[BMU] BMU_DealTask thread created successfully.\r\n");
+            LOG("BMU_DealTask thread created successfully.\r\n");
         }
     } while (ret != 0);
 }

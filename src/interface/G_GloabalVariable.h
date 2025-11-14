@@ -66,8 +66,8 @@ extern Setting_t g_ipsetting;
 #define FILEISDECRYPTIIONING 0x0008		// 文件正在解密中
 #define FILEDECRYPTIONNORMALTERMINATION 0x0010  // 文件解密正常完成
 
-#define OTASTARTRUNNING 0x0080 		// OTA空闲状态
-#define OTAIDLE 0x0000				// OTA开始运行
+#define OTASTARTRUNNING 0x0080 		// OTA开始运行
+#define OTAIDLE 0x0000				// OTA空闲状态
 #define OTASUCCESS 0x0100			// OTA升级成功
 #define OTAFAILED 0x0200			// OTA升级失败
 

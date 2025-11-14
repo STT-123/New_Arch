@@ -1,7 +1,7 @@
 #include "ip_setting.h"
 #include "interface/G_GloabalVariable.h"
 #include "interface/log/log.h"
-#include "./BMS/bms/CANRcvFcn.h"
+#include "./bms/bms_simulink/CANRcvFcn.h"
 #define CONFIG_FILE_PATH "setting.conf"
 Setting_t g_ipsetting;
 
@@ -31,7 +31,7 @@ int static load_setting_from_file(const char *filepath, Setting_t *ipsetting)
     return -1;
 }
 
-void G_settings_init()
+void settings_Init()
 {
     memset(&g_ipsetting, 0, sizeof(g_ipsetting));
 
@@ -58,7 +58,7 @@ void G_settings_init()
     }
 }
 
-void G_ip_set_deal(uint16_t address, uint16_t data)
+void save_ip_to_conffile(uint16_t address, uint16_t data)
 {
     static uint32_t ip_addr = 0;
     if (address == 0x6711) // 高 16 位
@@ -85,7 +85,7 @@ void G_ip_set_deal(uint16_t address, uint16_t data)
     }
 }
 
-void G_set_system_time_from_bcu(void)
+void set_system_time_from_bcu(void)
 {
     struct tm tm;
     struct timeval tv;

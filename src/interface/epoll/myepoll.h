@@ -12,7 +12,7 @@ typedef struct
 } my_event_data_t;
 typedef my_event_data_t *my_event_data_ptr;
 
-int my_epoll_init(void);
+int my_epoll_Init(void);
 int my_epoll_addtast(int fd, struct epoll_event *ev);
 int my_epoll_deltast(int fd, struct epoll_event *ev);
 
